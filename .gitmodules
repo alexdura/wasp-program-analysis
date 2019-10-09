@@ -1,6 +1,0 @@
-[submodule "phasar"]
-	path = phasar
-	url = https://github.com/alexdura/phasar
-[submodule "llvm"]
-	path = llvm
-	url = git@github.com:alexdura/llvm-project.git
