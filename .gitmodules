@@ -1,0 +1,6 @@
+[submodule "llvm"]
+	path = llvm
+	url = ./llvm
+[submodule "phasar"]
+	path = phasar
+	url = ./phasar

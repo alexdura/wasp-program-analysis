@@ -1,0 +1,16 @@
+* WASP Program Analysis Project
+
+** Getting Started
+*** Build a Docker image that contains LLVM and Phasar
+#+BEGIN_SRC
+git clone git@github.com:alexdura/wasp-program-analysis.git
+
+# we are importing Phasar and LLVM as submodules
+git submodule update --init --recursive
+
+# build the Docker image
+docker build . -t wasp-pa
+
+# enjoy!
+docker run -it wasp-pa
+#+END_SRC
