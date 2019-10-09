@@ -1,0 +1,6 @@
+[submodule "phasar"]
+	path = phasar
+	url = git@github.com:alexdura/phasar.git
+[submodule "llvm"]
+	path = llvm
+	url = git@github.com:alexdura/llvm-project.git
