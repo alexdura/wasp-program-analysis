@@ -14,3 +14,7 @@ docker build . -t wasp-pa
 # enjoy!
 docker run -it wasp-pa
 #+END_SRC
+
+*** Plugins
+
+The =phasar_src= directory contains examples, we are particularly interested in the =plugins= examples.
