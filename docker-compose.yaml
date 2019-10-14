@@ -1,0 +1,22 @@
+# This is a file for docker-composer
+# Which allows for creating "services" (configured containers)
+# We want a service with the docker container described
+# in the Dockerfile, except it has a directory that we can
+# write to. That way we have some persistent storage.
+# This is useful if we want to be able to modify the code.
+version: '3'
+services:
+    wasp-pa-dev:
+        container_name: wasp-pa
+        build: . # The Dockerfile in the current dir.
+        volumes:
+            # Volumes can be cached, delegated, or constitent
+            # Constitent mounts are the most restrictive but they give
+            # the highest guarantees that the directory on the host and
+            # on the container contain the same data
+            - ./src/:/mounted/src:consistent
+        # I think this is necessary to be able to run the shell in the
+        # container but I am not sure.
+        tty: true
+        stdin_open: true
+
