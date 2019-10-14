@@ -3,7 +3,6 @@
 # We want a service with the docker container described
 # in the Dockerfile, except it has a directory that we can
 # write to. That way we have some persistent storage.
-# This is useful if we want to be able to modify the code.
 version: '3'
 services:
     wasp-pa-dev:
