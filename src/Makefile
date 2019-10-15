@@ -1,22 +1,23 @@
 CXX := clang++
+CC := clang
 CXX_FLAGS := -std=c++14
 CXX_FLAGS += -Wall
 CXX_FLAGS += -Wno-return-type-c-linkage
 CXX_FLAGS += -O0
 CXX_FLAGS += -fPIC
 CXX_FLAGS += -shared
-INCLUDE_DIRS := -I/usr/local/include/wise_enum/
+INCLUDE_DIRS ?= -I/usr/local/include/wise_enum/
 LLVM_FLAGS := `llvm-config --cppflags`
 
 IFDSPluginSrc := MyIFDSProblem.cxx
 IFDSPlugin := $(patsubst %.cxx,%.so,$(IFDSPluginSrc))
 
-all: ifdsproblem 
+all: ifdsproblem
 ifdsproblem:
 	$(CXX) $(CXX_FLAGS) $(INCLUDE_DIRS) $(LLVM_FLAGS) $(IFDSPluginSrc) -o $(IFDSPlugin)
 
 Test.ll:
-	$(CXX) -S -emit-llvm Test.c
+	$(CC) -S -emit-llvm Test.c
 
 clean:
 	rm -f $(IFDSPlugin)
