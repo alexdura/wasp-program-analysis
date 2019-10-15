@@ -19,3 +19,7 @@ services:
         tty: true
         stdin_open: true
 
+        # We want to be "ourselves" inside the container
+        # That is, have the right user ID.
+        user: ${CURRENT_ID}
+

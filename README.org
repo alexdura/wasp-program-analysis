@@ -20,17 +20,19 @@ To do that, we use ~docker-compose~. It is a script that reads a
 ~docker-compose.yaml~ file to find a specification, it will run your
 containers following that spec.
 
+You need to set some environment variables to your user id before
+running the container, otherwise the files that you have will be saved
+inside the mounted directory as owned by root.
+
 To start the container, write:
 #+BEGIN_SRC bash
-docker-compose run wasp-pa-dev
+CURRENT_ID=$(id -u):$(id -g) docker-compose run wasp-pa-dev
 #+END_SRC
-    
+
 This will start the container, like in the previous section, but the
 directory ~./src/~ on the host will be mounted in ~/mounted/src~
 inside the container.
 
-*Warning:* It rebuilds the container, for some reason, so that might take some time.
-    
 *** Plugins
 
 The =phasar_src= directory contains examples, we are particularly interested in the =plugins= examples.
