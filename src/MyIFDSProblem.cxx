@@ -148,7 +148,13 @@ shared_ptr<FlowFunction<const llvm::Value *>> MyIFDSProblem::getRetFlowFunction(
   dbgs() << "CallSite: " << *callSite << "\n"
          << "RetSite: " << *retSite << "\n";
 
-  if (calleeMthd->getName().equals("taint")) {
+  // Here we match with a function
+  // Called "taint"
+  // NORIC: Really confused here because
+  //        we had to change the function name to match with
+  //        to make it work like it used to.
+  if (calleeMthd->getName().equals("_Z5taintv")) {
+    // Debugging
     dbgs() << "Matched taint function\n";
     return std::make_shared<Gen<const llvm::Value*>>(retSite, zeroValue());
   }
