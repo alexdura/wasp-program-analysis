@@ -11,7 +11,9 @@ class MyIFDSProblem : public psr::IFDSTabulationProblemPlugin {
   std::set<const llvm::Value*> TaintedValues;
 
 public:
+  // Constructor
   MyIFDSProblem(psr::LLVMBasedICFG &I, std::vector<std::string> EntryPoints);
+  // Destructor
   ~MyIFDSProblem() = default;
   std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
   getNormalFlowFunction(const llvm::Instruction *curr,

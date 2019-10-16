@@ -45,35 +45,63 @@ MyIFDSProblem::getNormalFlowFunction(const llvm::Instruction *curr,
   // getPointerOperand()/ getValueOperand() respectively.
   dbgs() << *curr <<  "->" <<  *succ << "\n";
 
+  // We match with stores
   if (const StoreInst *store = dyn_cast<StoreInst>(curr)) {
+    // You create a struct for returning your function
     struct StoreInfo : public FlowFunction<const Value*> {
-      const StoreInst *store;
+      const StoreInst *store; // Storing the pointer because you can't capture it directly
+      // Constructor
       StoreInfo(const StoreInst *store) : store(store) {}
+      // Computing where the value of source will go
       std::set<const Value*> computeTargets(const Value *source) override {
+	// store v [a]
         if (store->getValueOperand() == source)
+	  // We're looking at v
+	  // The value of v will flow into [a]
+	  // and itself, v
           return {store->getPointerOperand(), source};
         else if (store->getPointerOperand() == source)
-          return {};
+	  // We're looking at [a] instead.
+	  // It will be erased (replaced by v)
+          return {}; // So we return an empty set (cutting the link)
+	// Otherwise, nothing changes.
         else return {source};
       }
     };
+    // Printing stuff for debugging
     dbgs() << "Return store info\n";
     return make_shared<StoreInfo>(store);
   } else if (const LoadInst *load  = dyn_cast<LoadInst>(curr)) {
+    // Here we have a load, we need to define a relation
+    // The relation maps variables to sets of variables (targets)
+    // To do that, you return a struct with the method
+    // called computeTargets
+    // Let's say the load is
+    // v = load [a] 
     struct LoadInfo : public FlowFunction<const Value*> {
+      // We will want to save the load we're looking at
+      // Because we can't capture it directly
       const LoadInst *load;
       LoadInfo(const LoadInst *load) : load(load) {}
+      // This is the important bit
       std::set<const Value*> computeTargets(const Value *source) override {
+	// If the source is the address we're loading from
+	// source = a
         if (load->getPointerOperand() == source)
+	  // source flows into itself (a = a)
+	  // and the register we're defining (v).
           return {source, load};
-        else if (load == source)
+        else if (load == source) // the source is v
+	  // v will be erased (replaced by a)
           return {};
+	// Otherwise, we don't change anything
         else return {source};
       }
     };
     dbgs() << "Return load info\n";
     return make_shared<LoadInfo>(load);
   }
+  // We match with anything else.
   return Identity<const llvm::Value *>::getInstance();
 }
 
