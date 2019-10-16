@@ -28,7 +28,7 @@ __attribute__((destructor)) void fini() { cout << "fini - MyIFDSProblem\n"; }
 
 // Default constructor
 MyIFDSProblem::MyIFDSProblem(LLVMBasedICFG &I, vector<string> EntryPoints)
-    : IFDSTabulationProblemPlugin(I, EntryPoints) {}
+  : IFDSTabulationProblemPlugin(I, EntryPoints), TaintedValues() {}
 
 
 ///////////////////////////////////////////////////////
@@ -44,8 +44,36 @@ MyIFDSProblem::getNormalFlowFunction(const llvm::Instruction *curr,
   // llvm::StoreInst). Important memberfunctions are getPointerOperand() and
   // getPointerOperand()/ getValueOperand() respectively.
   dbgs() << *curr <<  "->" <<  *succ << "\n";
-  dbgs() << "Return identity\n";
 
+  if (const StoreInst *store = dyn_cast<StoreInst>(curr)) {
+    struct StoreInfo : public FlowFunction<const Value*> {
+      const StoreInst *store;
+      StoreInfo(const StoreInst *store) : store(store) {}
+      std::set<const Value*> computeTargets(const Value *source) override {
+        if (store->getValueOperand() == source)
+          return {store->getPointerOperand(), source};
+        else if (store->getPointerOperand() == source)
+          return {};
+        else return {source};
+      }
+    };
+    dbgs() << "Return store info\n";
+    return make_shared<StoreInfo>(store);
+  } else if (const LoadInst *load  = dyn_cast<LoadInst>(curr)) {
+    struct LoadInfo : public FlowFunction<const Value*> {
+      const LoadInst *load;
+      LoadInfo(const LoadInst *load) : load(load) {}
+      std::set<const Value*> computeTargets(const Value *source) override {
+        if (load->getPointerOperand() == source)
+          return {source, load};
+        else if (load == source)
+          return {};
+        else return {source};
+      }
+    };
+    dbgs() << "Return load info\n";
+    return make_shared<LoadInfo>(load);
+  }
   return Identity<const llvm::Value *>::getInstance();
 }
 
@@ -88,6 +116,10 @@ shared_ptr<FlowFunction<const llvm::Value *>> MyIFDSProblem::getRetFlowFunction(
   // the function's return instruction - llvm::ReturnInst may be used.
   // The 'retSite' is - in case of LLVM - the call-site and it is possible
   // to wrap it into an llvm::ImmutableCallSite.
+  dbgs() << *callSite->getParent()->getParent();
+  dbgs() << "CallSite: " << *callSite << "\n"
+         << "RetSite: " << *retSite << "\n";
+
   if (calleeMthd->getName().equals("taint")) {
     dbgs() << "Matched taint function\n";
     return std::make_shared<Gen<const llvm::Value*>>(retSite, zeroValue());

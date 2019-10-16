@@ -8,6 +8,8 @@
 #include <vector>
 
 class MyIFDSProblem : public psr::IFDSTabulationProblemPlugin {
+  std::set<const llvm::Value*> TaintedValues;
+
 public:
   MyIFDSProblem(psr::LLVMBasedICFG &I, std::vector<std::string> EntryPoints);
   ~MyIFDSProblem() = default;
