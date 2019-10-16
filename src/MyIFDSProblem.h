@@ -36,6 +36,12 @@ public:
 
   std::map<const llvm::Instruction *, std::set<const llvm::Value *>>
   initialSeeds() override;
+
+  void printIFDSReport(std::ostream &os,
+                       psr::SolverResults<const llvm::Instruction*, const llvm::Value*, psr::BinaryDomain> &SR) override {
+    os << "No IFDS report available!\n";
+  }
+
 };
 
 extern "C" std::unique_ptr<psr::IFDSTabulationProblemPlugin>

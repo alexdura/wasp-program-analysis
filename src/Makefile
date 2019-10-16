@@ -6,6 +6,7 @@ CXX_FLAGS += -Wno-return-type-c-linkage
 CXX_FLAGS += -O0
 CXX_FLAGS += -fPIC
 CXX_FLAGS += -shared
+CXX_FLAGS += -g
 INCLUDE_DIRS ?= -I/usr/local/include/wise_enum/
 LLVM_FLAGS := `llvm-config --cppflags`
 

@@ -4,9 +4,11 @@
 #include <phasar/PhasarLLVM/IfdsIde/FlowFunctions/Gen.h>
 #include <phasar/PhasarLLVM/IfdsIde/FlowFunctions/Identity.h>
 #include <phasar/PhasarLLVM/IfdsIde/FlowFunctions/KillAll.h>
+#include "llvm/Support/Debug.h"
 
 using namespace std;
 using namespace psr;
+using namespace llvm;
 
 // Factory function that is used to create an instance by the Phasar framework.
 unique_ptr<IFDSTabulationProblemPlugin>
@@ -41,24 +43,9 @@ MyIFDSProblem::getNormalFlowFunction(const llvm::Instruction *curr,
   // Tainted values may spread through loads and stores (llvm::LoadInst and
   // llvm::StoreInst). Important memberfunctions are getPointerOperand() and
   // getPointerOperand()/ getValueOperand() respectively.
+  dbgs() << *curr <<  "->" <<  *succ << "\n";
+  dbgs() << "Return identity\n";
 
-  // FlowFunction is a class in Phasar.
-  if (auto Alloca = llvm::dyn_cast<llvm::AllocaInst>(curr)) {
-    return new Gen<const llvm::Instruction*>(curr, succ);
-    // // We create a struct directly
-    // struct MyFlowFunction : FlowFunction<llvm::Value*> {
-    //   // And set its computeTargets method
-    //   // (Kind of like a convoluted way of writing
-    //   // lambda expressions)
-    //   set<llvm::Value *> computeTargets(llvm::Value* src) {
-    // 	return (src == zerovalue) ?
-    // 	  // What does this do?
-    // 	  { src, Alloca } : { src };
-    //   }
-    // };
-    // return shared_ptr(new MyFlowFunction());  
-  }
-    
   return Identity<const llvm::Value *>::getInstance();
 }
 
@@ -101,6 +88,11 @@ shared_ptr<FlowFunction<const llvm::Value *>> MyIFDSProblem::getRetFlowFunction(
   // the function's return instruction - llvm::ReturnInst may be used.
   // The 'retSite' is - in case of LLVM - the call-site and it is possible
   // to wrap it into an llvm::ImmutableCallSite.
+  if (calleeMthd->getName().equals("taint")) {
+    dbgs() << "Matched taint function\n";
+    return std::make_shared<Gen<const llvm::Value*>>(retSite, zeroValue());
+  }
+
   return Identity<const llvm::Value *>::getInstance();
 }
 
