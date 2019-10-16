@@ -24,3 +24,6 @@ clean:
 	rm -f $(IFDSPlugin)
 	rm -f *.dot
 	rm -f *.json
+
+run:
+	phasar --config Test.c.ll.conf
