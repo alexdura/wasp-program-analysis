@@ -34,7 +34,7 @@ json_data = json.load(f)
 #+RESULTS: load_json
 : None
 
-#+BEGIN_SRC python :results output :noweb yes
+#+BEGIN_SRC python :results output :noweb yes :exports both
 <<load_json>>
 print("JSON_DATA", json_data)
 #+END_SRC
@@ -55,7 +55,7 @@ dataflow_data = [d for d in json_data if d["DataFlow"]][0]["DataFlow"]
 
 We can test our function:
 
-#+BEGIN_SRC python :results output :noweb yes
+#+BEGIN_SRC python :results output :noweb yes :exports both
 <<load_dataflow>>
 print("DATAFLOW_DATA", dataflow_data)
 #+END_SRC
@@ -95,7 +95,7 @@ def make_graph(dataflow_data):
 
 We can test the function on our data-flow-data program:
 #+NAME:make_graph_test
-#+BEGIN_SRC python :noweb yes :results output
+#+BEGIN_SRC python :noweb yes :results output :exports both
 # Loading the dataflow data
 <<load_dataflow>>
 # Getting the make_graph function and its friends
@@ -231,7 +231,7 @@ def make_edges(dataflow_data):
 
 We can test the function:
 
-#+BEGIN_SRC python :results output :noweb yes
+#+BEGIN_SRC python :results output :noweb yes :exports both
 import re
 <<make_vertices>>
 <<make_edges>>
