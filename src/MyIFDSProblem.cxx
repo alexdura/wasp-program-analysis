@@ -30,7 +30,6 @@ __attribute__((destructor)) void fini() { cout << "fini - MyIFDSProblem\n"; }
 MyIFDSProblem::MyIFDSProblem(LLVMBasedICFG &I, vector<string> EntryPoints)
   : IFDSTabulationProblemPlugin(I, EntryPoints), TaintedValues() {}
 
-
 ///////////////////////////////////////////////////////
 // The flow function for intra-procedural statements //
 // (Allocations, for instance)			     //
@@ -43,39 +42,68 @@ MyIFDSProblem::getNormalFlowFunction(const llvm::Instruction *curr,
   // Tainted values may spread through loads and stores (llvm::LoadInst and
   // llvm::StoreInst). Important memberfunctions are getPointerOperand() and
   // getPointerOperand()/ getValueOperand() respectively.
-  dbgs() << *curr <<  "->" <<  *succ << "\n";
-
   if (const StoreInst *store = dyn_cast<StoreInst>(curr)) {
     struct StoreInfo : public FlowFunction<const Value*> {
       const StoreInst *store;
       StoreInfo(const StoreInst *store) : store(store) {}
       std::set<const Value*> computeTargets(const Value *source) override {
-        if (store->getValueOperand() == source)
+        dbgs() << "@" << *store << " : \n\t" << *source << " -> ";
+        if (store->getValueOperand() == source) {
+          dbgs() << *store->getPointerOperand() << " " << *source << "\n";
           return {store->getPointerOperand(), source};
-        else if (store->getPointerOperand() == source)
+        } else if (store->getPointerOperand() == source) {
+          dbgs() << "NONE\n";
           return {};
-        else return {source};
+        } else {
+          dbgs() << *source << "\n";
+          return {source};
+        }
       }
     };
-    dbgs() << "Return store info\n";
     return make_shared<StoreInfo>(store);
   } else if (const LoadInst *load  = dyn_cast<LoadInst>(curr)) {
     struct LoadInfo : public FlowFunction<const Value*> {
       const LoadInst *load;
       LoadInfo(const LoadInst *load) : load(load) {}
       std::set<const Value*> computeTargets(const Value *source) override {
-        if (load->getPointerOperand() == source)
+        dbgs() << "@" << *load << " : \n\t" <<*source << " -> ";
+        if (load->getPointerOperand() == source) {
+          dbgs() << *load << ", " << *source << "\n";
           return {source, load};
-        else if (load == source)
+
+        }
+        else if (load == source) {
+          dbgs() << "NONE\n";
           return {};
-        else return {source};
+        }
+        else {
+          dbgs() << *source << "\n";
+          return {source};
+        }
       }
     };
-    dbgs() << "Return load info\n";
     return make_shared<LoadInfo>(load);
   }
   return Identity<const llvm::Value *>::getInstance();
 }
+
+struct CollectLeaks : public FlowFunction<const Value*> {
+  std::map<const Instruction*, std::set<const Value*>> &LeakMap;
+  const Instruction *CallStmt;
+  const Value *Zero;
+  CollectLeaks(std::map<const Instruction*, std::set<const Value*>> &leakMap,
+               const Instruction *call, const Value *zero) :
+    LeakMap(leakMap), CallStmt(call), Zero(zero) {}
+  std::set<const Value*> computeTargets(const Value *source) override {
+    auto cs = ImmutableCallSite(CallStmt);
+    for (Value *arg : cs.args()) {
+      if (source != Zero && source == arg) {
+        LeakMap[CallStmt].insert(source);
+      }
+    }
+    return {source};
+  }
+};
 
 //////////////////////////////////////////////////
 // The flow function for mapping the parameters //
@@ -97,6 +125,11 @@ MyIFDSProblem::getCallFlowFunction(const llvm::Instruction *callStmt,
   // sinks of the taint analysis. It works by killing all flow facts at the
   // call-site and generating the desired facts within the
   // getCallToRetFlowFunction.
+  auto cs = dyn_cast<CallInst>(callStmt);
+  if (cs->getCalledFunction()->getName() == "print") {
+    return make_shared<CollectLeaks>(LeakMap, callStmt, zeroValue());
+  }
+
   return Identity<const llvm::Value *>::getInstance();
 }
 
@@ -107,7 +140,7 @@ MyIFDSProblem::getCallFlowFunction(const llvm::Instruction *callStmt,
 shared_ptr<FlowFunction<const llvm::Value *>> MyIFDSProblem::getRetFlowFunction(
     const llvm::Instruction *callSite, const llvm::Function *calleeMthd,
     const llvm::Instruction *exitStmt, const llvm::Instruction *retSite) {
-  cout << "MyIFDSProblem::getRetFlowFunction()\n";
+
   // TODO: Must be modeled to map the return value back into the caller's
   // context. When dealing with pointer parameters one must also map the
   // formals at callee-side back into the actuals at caller-side. All other
@@ -116,13 +149,22 @@ shared_ptr<FlowFunction<const llvm::Value *>> MyIFDSProblem::getRetFlowFunction(
   // the function's return instruction - llvm::ReturnInst may be used.
   // The 'retSite' is - in case of LLVM - the call-site and it is possible
   // to wrap it into an llvm::ImmutableCallSite.
-  dbgs() << *callSite->getParent()->getParent();
-  dbgs() << "CallSite: " << *callSite << "\n"
-         << "RetSite: " << *retSite << "\n";
-
   if (calleeMthd->getName().equals("taint")) {
-    dbgs() << "Matched taint function\n";
-    return std::make_shared<Gen<const llvm::Value*>>(retSite, zeroValue());
+    struct TaintTF : public FlowFunction<const Value*> {
+      const Instruction *CallSite;
+      const Value *Zero;
+      TaintTF(const Instruction *call, const Value *zero) : CallSite(call), Zero(zero) {}
+      std::set<const Value*> computeTargets(const Value *source) override {
+        dbgs() << "@" << *CallSite << ":\n\t" << *source << " -> ";
+        if (source == Zero) {
+          dbgs() << *Zero << ", " << *CallSite << "\n";
+          return {Zero, CallSite};
+        }
+        dbgs() << *source << "\n";
+        return {source};
+      }
+    };
+    return make_shared<TaintTF>(callSite, zeroValue());
   }
 
   return Identity<const llvm::Value *>::getInstance();
@@ -140,6 +182,7 @@ MyIFDSProblem::getCallToRetFlowFunction(const llvm::Instruction *callSite,
   // TODO: Use in combination with getCallFlowFunction to model the effects of
   // source and sink functions. It most analyses flow facts can be passed as
   // identity.
+
   return Identity<const llvm::Value *>::getInstance();
 }
 
@@ -165,4 +208,14 @@ MyIFDSProblem::initialSeeds() {
                                   set<const llvm::Value *>({zeroValue()})));
   }
   return SeedMap;
+}
+
+
+void MyIFDSProblem::printIFDSReport(std::ostream &os,
+                                    psr::SolverResults<const llvm::Instruction*,
+                                    const llvm::Value*, psr::BinaryDomain> &SR)  {
+  for (auto &p : LeakMap) {
+    os << "Leak point:";
+    os << llvmIRToString(p.first) << "\n";
+  }
 }

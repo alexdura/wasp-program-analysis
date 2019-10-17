@@ -9,6 +9,7 @@
 
 class MyIFDSProblem : public psr::IFDSTabulationProblemPlugin {
   std::set<const llvm::Value*> TaintedValues;
+  std::map<const llvm::Instruction*, std::set<const llvm::Value*>> LeakMap;
 
 public:
   MyIFDSProblem(psr::LLVMBasedICFG &I, std::vector<std::string> EntryPoints);
@@ -40,10 +41,8 @@ public:
   initialSeeds() override;
 
   void printIFDSReport(std::ostream &os,
-                       psr::SolverResults<const llvm::Instruction*, const llvm::Value*, psr::BinaryDomain> &SR) override {
-    os << "No IFDS report available!\n";
-  }
-
+                       psr::SolverResults<const llvm::Instruction*,
+                       const llvm::Value*, psr::BinaryDomain> &SR) override;
 };
 
 extern "C" std::unique_ptr<psr::IFDSTabulationProblemPlugin>
