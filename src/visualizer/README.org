@@ -144,9 +144,9 @@ graph DataFlow {
 
 Now that we have our function, we can write to a file:
 
-#+BEGIN_SRC python :noweb yes
-  <<load_dataflow>>
+#+BEGIN_SRC python :noweb yes :tangle results_visualizer.py
   <<make_graph>>
+  <<load_dataflow>>
   with open("results.dot", 'w') as output_file:
       text = make_graph(dataflow_data)
       output_file.write(text)
