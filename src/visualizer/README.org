@@ -4,9 +4,9 @@ Because emacs somehow wrote the wrong buffer in the previous version.
 
 * What is this
 
-This is a script that will take a ~results.json~ file as an input, and output a dot file.
+This is a script that will take a ~results.json~ file as an input, and output a ~results.dot~ file.
 
-Here is how to use the script: 
+Here is how to use the script:
 #+BEGIN_SRC bash
 python results_visualizer.py results.json # Generates a dot file
 dot -Tpdf results.dot # Generates a PDF for you.
@@ -81,12 +81,14 @@ For that we create a Python function that creates a graph, based on how we told 
 
 #+NAME:make_graph
 #+BEGIN_SRC python :noweb yes
-  <<make_vertices>> 
+  <<make_vertices>>
   <<make_edges>>
   def make_graph(dataflow_data):
       return 'graph DataFlow {{\n{vertices}\n{edges}}}'.format(
 	  vertices=make_vertices(dataflow_data),
 	  edges=make_edges(dataflow_data))
+
+
 #+END_SRC
 
 #+RESULTS: make_graph
@@ -139,7 +141,7 @@ graph DataFlow {
 #+end_example
 
 * Writing to a file
-  
+
 Now that we have our function, we can write to a file:
 
 #+BEGIN_SRC python :noweb yes
@@ -154,7 +156,7 @@ Now that we have our function, we can write to a file:
 : None
 
 ** Making vertices
-   
+
 I want something that makes vertice data. It should look like:
 
 #+BEGIN_SRC
@@ -180,6 +182,7 @@ This is how we make it in Python
       else:
 	  return "\"{0}\"".format(vertex_name)
 
+
   def make_vertices(dataflow_data):
       """A function that will create vertex labels"""
       text = ""
@@ -188,6 +191,8 @@ This is how we make it in Python
 	  text += make_vertex(v)
 
       return text
+
+
 #+END_SRC
 
 #+RESULTS: make_vertices
@@ -195,9 +200,9 @@ This is how we make it in Python
 
 ** Making edges
 
-We want something that looks like: 
+We want something that looks like:
 
-#+BEGIN_SRC 
+#+BEGIN_SRC
 <vertex1> -- <vertex2>
 <vertex1> -- <vertex3>
 ...
@@ -214,16 +219,18 @@ This is how we write it in Python
       for (vertex, info) in dataflow_data.items():
 	  facts = info["Facts"]
 	  targets = [f[0] for f in facts]
-	  for target in targets:
+	  for target in targetse
 	      line = "{0} -- {1};".format(
 		  make_vertex(vertex),
 		  make_vertex(target))
 	      text += line + "\n"
 
       return text
+
+
 #+END_SRC
 
-We can test the function: 
+We can test the function:
 
 #+BEGIN_SRC python :results output :noweb yes
   import re
@@ -235,6 +242,6 @@ We can test the function:
 #+RESULTS:
 : "v1" -- "v2";
 : "v1" -- "zero";
-: 
+:
 
 As expected.
