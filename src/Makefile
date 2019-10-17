@@ -25,5 +25,5 @@ clean:
 	rm -f *.dot
 	rm -f *.json
 
-run:
+run: Test.ll ifdsproblem
 	phasar --config Test.c.ll.conf
