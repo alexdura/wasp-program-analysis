@@ -81,12 +81,12 @@ For that we create a Python function that creates a graph, based on how we told 
 
 #+NAME:make_graph
 #+BEGIN_SRC python :noweb yes
-  <<make_vertices>>
-  <<make_edges>>
-  def make_graph(dataflow_data):
-      return 'graph DataFlow {{\n{vertices}\n{edges}}}'.format(
-	  vertices=make_vertices(dataflow_data),
-	  edges=make_edges(dataflow_data))
+<<make_vertices>>
+<<make_edges>>
+def make_graph(dataflow_data):
+    return 'graph DataFlow {{\n{vertices}\n{edges}}}'.format(
+        vertices=make_vertices(dataflow_data),
+        edges=make_edges(dataflow_data))
 
 
 #+END_SRC
@@ -145,11 +145,11 @@ graph DataFlow {
 Now that we have our function, we can write to a file:
 
 #+BEGIN_SRC python :noweb yes :tangle results_visualizer.py
-  <<make_graph>>
-  <<load_dataflow>>
-  with open("results.dot", 'w') as output_file:
-      text = make_graph(dataflow_data)
-      output_file.write(text)
+<<make_graph>>
+<<load_dataflow>>
+with open("results.dot", 'w') as output_file:
+    output_text = make_graph(dataflow_data)
+    output_file.write(output_text)
 #+END_SRC
 
 #+RESULTS:
@@ -169,28 +169,28 @@ This is how we make it in Python
 
 #+NAME: make_vertices
 #+BEGIN_SRC python :noweb yes
-  def make_vertex(vertex_name):
-      """
-      A function that will return the vertex name between quotation marks
-      """
-      # The result sometimes has the name
-      # of the method as a prefix
-      if (re.match("[a-zA-Z]+::", vertex_name)):
-	  # we return the suffix only
-	  return "\"{0}\"".format(
-	      vertex_name.split("::")[1])
-      else:
-	  return "\"{0}\"".format(vertex_name)
+def make_vertex(vertex_name):
+    """
+    A function that will return the vertex name between quotation marks
+    """
+    # The result sometimes has the name
+    # of the method as a prefix
+    if (re.match("[a-zA-Z]+::", vertex_name)):
+        # we return the suffix only
+        return "\"{0}\"".format(
+            vertex_name.split("::")[1])
+    else:
+        return "\"{0}\"".format(vertex_name)
 
 
-  def make_vertices(dataflow_data):
-      """A function that will create vertex labels"""
-      text = ""
-      for v in dataflow_data:
-	  text += "\n"
-	  text += make_vertex(v)
+def make_vertices(dataflow_data):
+    """A function that will create vertex labels"""
+    text = ""
+    for v in dataflow_data:
+        text += "\n"
+        text += make_vertex(v)
 
-      return text
+    return text
 
 
 #+END_SRC
@@ -212,20 +212,19 @@ This is how we write it in Python
 
 #+NAME: make_edges
 #+BEGIN_SRC python :results output :noweb yes
-  <<make_vertices>>
-  def make_edges(dataflow_data):
-      """ A function that will create the string for edges spec"""
-      text = ""
-      for (vertex, info) in dataflow_data.items():
-	  facts = info["Facts"]
-	  targets = [f[0] for f in facts]
-	  for target in targetse
-	      line = "{0} -- {1};".format(
-		  make_vertex(vertex),
-		  make_vertex(target))
-	      text += line + "\n"
+def make_edges(dataflow_data):
+    """ A function that will create the string for edges spec"""
+    text = ""
+    for (vertex, info) in dataflow_data.items():
+        facts = info["Facts"]
+        targets = [f[0] for f in facts]
+        for target in targets:
+            line = "{0} -- {1};".format(
+                make_vertex(vertex),
+                make_vertex(target))
+            text += line + "\n"
 
-      return text
+    return text
 
 
 #+END_SRC
@@ -233,15 +232,16 @@ This is how we write it in Python
 We can test the function:
 
 #+BEGIN_SRC python :results output :noweb yes
-  import re
-  <<make_edges>>
-  # A test
-  print(make_edges({"v1" : {"Facts" : [["v2", "BOTTOM"], ["zero", "BOTTOM"]]}}))
+import re
+<<make_vertices>>
+<<make_edges>>
+# A test
+print(make_edges({"v1" : {"Facts" : [["v2", "BOTTOM"], ["zero", "BOTTOM"]]}}))
 #+END_SRC
 
 #+RESULTS:
 : "v1" -- "v2";
 : "v1" -- "zero";
-:
+: 
 
 As expected.
