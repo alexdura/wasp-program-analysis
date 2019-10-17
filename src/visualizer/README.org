@@ -1,0 +1,15 @@
+#+TITLE: The graph visualizer VERSION 2
+
+Because emacs somehow wrote the wrong buffer in the previous version.
+
+* What is this
+
+This is a script that will take a ~results.json~ file as an input, and output a dot file.
+
+Here is how to use the script: 
+#+BEGIN_SRC bash
+python results_visualizer.py results.json # Generates a dot file
+dot -Tpdf results.dot # Generates a PDF for you.
+#+END_SRC
+
+
