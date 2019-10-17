@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+import json
+import sys
+import re # For regular expressions.
+
+# Utilities declarations
 def make_vertex(vertex_name):
     """
     A function that will return the vertex name between quotation marks
@@ -43,18 +49,17 @@ def make_graph(dataflow_data):
         edges=make_edges(dataflow_data))
 
 
-import json
-import sys
-import re # For regular expressions.
+if __name__ == "__main__":
+    if len(sys.argv) != 1:
+        filename = sys.argv[1]
+    else:
+        filename = "results.json"
 
-if sys.argv[0]:
-    filename = sys.argv[0]
-else:
-    filename = "results.json"
+    print("Loading from '{0}'...'".format(filename))
 
-f = open(filename)
-json_data = json.load(f)
-dataflow_data = [d for d in json_data if d["DataFlow"]][0]["DataFlow"]
-with open("results.dot", 'w') as output_file:
-    output_text = make_graph(dataflow_data)
-    output_file.write(output_text)
+    f = open(filename)
+    json_data = json.load(f)
+    dataflow_data = [d for d in json_data if d["DataFlow"]][0]["DataFlow"]
+    with open("results.dot", 'w') as output_file:
+        output_text = make_graph(dataflow_data)
+        output_file.write(output_text)

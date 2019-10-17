@@ -16,16 +16,22 @@ dot -Tpdf results.dot # Generates a PDF for you.
 
 First, it loads JSON from the results.json file, if provided.
 
-#+NAME: load_json
+#+NAME: imports
 #+BEGIN_SRC python
 import json
 import sys
 import re # For regular expressions.
+#+END_SRC
 
-if sys.argv[0]:
-    filename = sys.argv[0]
+
+#+NAME: load_json
+#+BEGIN_SRC python
+if len(sys.argv) != 1:
+    filename = sys.argv[1]
 else:
     filename = "results.json"
+
+print("Loading from '{0}'...'".format(filename))
 
 f = open(filename)
 json_data = json.load(f)
@@ -35,6 +41,7 @@ json_data = json.load(f)
 : None
 
 #+BEGIN_SRC python :results output :noweb yes :exports both
+<<imports>>
 <<load_json>>
 print("JSON_DATA", json_data)
 #+END_SRC
@@ -143,11 +150,16 @@ graph DataFlow {
 Now that we have our function, we can write to a file:
 
 #+BEGIN_SRC python :noweb yes :tangle results_visualizer.py
+#!/usr/bin/env python
+<<imports>>
+
+# Utilities declarations
 <<make_graph>>
-<<load_dataflow>>
-with open("results.dot", 'w') as output_file:
-    output_text = make_graph(dataflow_data)
-    output_file.write(output_text)
+if __name__ == "__main__":
+    <<load_dataflow>>
+    with open("results.dot", 'w') as output_file:
+        output_text = make_graph(dataflow_data)
+        output_file.write(output_text)
 #+END_SRC
 
 #+RESULTS:
