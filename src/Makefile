@@ -14,11 +14,11 @@ IFDSPluginSrc := MyIFDSProblem.cxx
 IFDSPlugin := $(patsubst %.cxx,%.so,$(IFDSPluginSrc))
 
 all: ifdsproblem
-ifdsproblem:
+ifdsproblem: MyIFDSProblem.cxx MyIFDSProblem.h
 	$(CXX) $(CXX_FLAGS) $(INCLUDE_DIRS) $(LLVM_FLAGS) $(IFDSPluginSrc) -o $(IFDSPlugin)
 
-Test.ll:
-	$(CC) -S -emit-llvm Test.c
+Test.ll: Test.c
+	$(CC) -S -g -emit-llvm Test.c
 
 clean:
 	rm -f $(IFDSPlugin)

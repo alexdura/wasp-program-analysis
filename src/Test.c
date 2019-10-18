@@ -7,9 +7,20 @@ int taint() { return 13; }
 
 void print(int x) { /* sink */ }
 
+void foo(int x) {
+  print(x);
+}
+
+int bar() {
+  return taint();
+}
+
 int main() {
   int i = 0;
   int j = taint();
+  foo(j);
+  foo(i);
   print(i);
   print(j); // Should not be allowed.
+  print(bar());
 }

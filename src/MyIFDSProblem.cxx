@@ -1,9 +1,11 @@
 #include "MyIFDSProblem.h"
 #include <iostream>
+#include <iterator>
 #include <phasar/PhasarLLVM/ControlFlow/LLVMBasedICFG.h>
 #include <phasar/PhasarLLVM/IfdsIde/FlowFunctions/Gen.h>
 #include <phasar/PhasarLLVM/IfdsIde/FlowFunctions/Identity.h>
 #include <phasar/PhasarLLVM/IfdsIde/FlowFunctions/KillAll.h>
+#include <phasar/PhasarLLVM/IfdsIde/FlowFunctions/LambdaFlow.h>
 #include "llvm/Support/Debug.h"
 
 using namespace std;
@@ -134,6 +136,24 @@ struct CollectLeaks : public FlowFunction<const Value*> {
   }
 };
 
+struct ConcreteToFormal : public FlowFunction<const Value*> {
+  const ImmutableCallSite Call;
+  const Function *Callee;
+  const Value *Zero;
+  ConcreteToFormal(const Instruction *call, const Function *callee) :
+    Call(call), Callee(callee) {}
+  std::set<const Value*> computeTargets(const Value *source) override {
+    auto It = std::find(Call.arg_begin(), Call.arg_end(), source);
+    if (It != Call.arg_end()) {
+      // This value is passed in the call
+      unsigned index = Call.getArgumentNo(It);
+      const Value* target = std::next(Callee->arg_begin(), index);
+      return {target};
+    }
+    return {};
+  }
+};
+
 //////////////////////////////////////////////////
 // The flow function for mapping the parameters //
 // To the formal parameters of the function     //
@@ -157,6 +177,8 @@ MyIFDSProblem::getCallFlowFunction(const llvm::Instruction *callStmt,
   auto cs = dyn_cast<CallInst>(callStmt);
   if (cs->getCalledFunction()->getName() == "print") {
     return make_shared<CollectLeaks>(LeakMap, callStmt, zeroValue());
+  } else {
+    return make_shared<ConcreteToFormal>(callStmt, destMthd);
   }
 
   return Identity<const llvm::Value *>::getInstance();
@@ -180,8 +202,23 @@ shared_ptr<FlowFunction<const llvm::Value *>> MyIFDSProblem::getRetFlowFunction(
   // to wrap it into an llvm::ImmutableCallSite.
   if (calleeMthd->getName().equals("taint")) {
     return std::make_shared<Gen<const llvm::Value*>>(callSite, zeroValue());
+  } else {
+    const ReturnInst *retStmt = cast<ReturnInst>(exitStmt);
+    if (!retStmt->getReturnValue()) {
+      // The function has a void return type. Kill everything on the
+      // return path.
+      return KillAll<const Value*>::getInstance();
+    }
+    auto killAllExceptRet = [retStmt, callSite] (const Value* source) -> std::set<const Value*> {
+      if (source == retStmt->getReturnValue()) {
+        return {callSite};
+      } else {
+        return {};
+      }
+    };
+    return make_shared<LambdaFlow<const Value*>>(killAllExceptRet);
   }
-
+  llvm_unreachable("Indirect calls not supported (among many other things)");
   return Identity<const llvm::Value *>::getInstance();
 }
 
@@ -230,7 +267,9 @@ void MyIFDSProblem::printIFDSReport(std::ostream &os,
                                     psr::SolverResults<const llvm::Instruction*,
                                     const llvm::Value*, psr::BinaryDomain> &SR)  {
   for (auto &p : LeakMap) {
-    os << "Leak point:";
-    os << llvmIRToString(p.first) << "\n";
+    const auto &DL = p.first->getDebugLoc();
+    outs() << "Leak point: ";
+    DL.print(outs());
+    outs() << "\n";
   }
 }
