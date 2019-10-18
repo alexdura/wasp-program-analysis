@@ -179,21 +179,7 @@ shared_ptr<FlowFunction<const llvm::Value *>> MyIFDSProblem::getRetFlowFunction(
   // The 'retSite' is - in case of LLVM - the call-site and it is possible
   // to wrap it into an llvm::ImmutableCallSite.
   if (calleeMthd->getName().equals("taint")) {
-    struct TaintTF : public FlowFunction<const Value*> {
-      const Instruction *CallSite;
-      const Value *Zero;
-      TaintTF(const Instruction *call, const Value *zero) : CallSite(call), Zero(zero) {}
-      std::set<const Value*> computeTargets(const Value *source) override {
-        dbgs() << "@" << *CallSite << ":\n\t" << *source << " -> ";
-        if (source == Zero) {
-          dbgs() << *Zero << ", " << *CallSite << "\n";
-          return {Zero, CallSite};
-        }
-        dbgs() << *source << "\n";
-        return {source};
-      }
-    };
-    return make_shared<TaintTF>(callSite, zeroValue());
+    return std::make_shared<Gen<const llvm::Value*>>(callSite, zeroValue());
   }
 
   return Identity<const llvm::Value *>::getInstance();
