@@ -21,6 +21,7 @@ First, it loads JSON from the results.json file, if provided.
 import json
 import sys
 import re # For regular expressions.
+import textwrap
 #+END_SRC
 
 
@@ -76,7 +77,7 @@ print("DATAFLOW_DATA", dataflow_data)
 
  Here is the syntax for a graph in graphviz:
 
- #+BEGIN_SRC dot
+#+BEGIN_SRC dot :file dot_example2.png
 // The graph name and the semicolons are optional
 graph graphname {
     a -- b -- c;
@@ -84,15 +85,19 @@ graph graphname {
 }
  #+END_SRC
 
+ #+RESULTS:
+ [[file:dot_example2.png]]
+
  For that we create a Python function that creates a graph, based on how we told it to create edges and vertice data.
 
  #+NAME:make_graph
  #+BEGIN_SRC python :noweb yes
 <<make_vertices>>
 <<make_edges>>
+<<make_subgraphs>>
 def make_graph(dataflow_data):
-    return 'graph DataFlow {{\n{vertices}\n{edges}}}'.format(
-        vertices=make_vertices(dataflow_data),
+    return 'digraph DataFlow {{\n{subgraphs}\n{edges}}}'.format(
+        subgraphs=make_subgraphs(dataflow_data),
         edges=make_edges(dataflow_data))
 
 
@@ -116,34 +121,41 @@ print(make_graph(dataflow_data))
  Loading from 'results.json'...'
  graph DataFlow {
 
- ID_2 [label="%3 = alloca i32, align 4, !pha"]
- ID_3 [label="store i32 0, i32* %1, align 4,"]
- ID_0 [label="%1 = alloca i32, align 4, !pha"]
- ID_5 [label="%4 = load i32, i32* %2, align "]
- ID_8 [label="ret i32 %5, !phasar.instructio"]
- ID_4 [label="store i32 0, i32* %2, align 4,"]
- ID_6 [label="store i32 %4, i32* %3, align 4"]
- ID_1 [label="%2 = alloca i32, align 4, !pha"]
- ID_7 [label="%5 = load i32, i32* %3, align "]
- ID_2 -- ID_0;
- ID_2 -- ZERO;
- ID_2 -- ID_1;
- ID_3 -- ID_1;
- ID_3 -- ID_2;
- ID_3 -- ZERO;
- ID_3 -- ID_0;
- ID_0 -- ZERO;
- ID_5 -- ZERO;
- ID_5 -- ID_2;
- ID_8 -- ZERO;
- ID_4 -- ZERO;
- ID_4 -- ID_1;
- ID_4 -- ID_2;
- ID_6 -- ZERO;
- ID_6 -- ID_2;
- ID_1 -- ID_0;
- ID_1 -- ZERO;
- ID_7 -- ZERO;
+ subgraph cluster_main {
+     style=filled
+     color=lightgray
+     label="main"
+     ID_main_2 [label="main::%3 = alloca i32, align 4, !phasar.instruction.id !4, ID: 2"]
+     ID_main_3 [label="main::store i32 0, i32* %1, align 4, !phasar.instruction.id !5, ID: 3"]
+     ID_main_0 [label="main::%1 = alloca i32, align 4, !phasar.instruction.id !2, ID: 0"]
+     ID_main_5 [label="main::%4 = load i32, i32* %2, align 4, !phasar.instruction.id !7, ID: 5"]
+     ID_main_8 [label="main::ret i32 %5, !phasar.instruction.id !10, ID: 8"]
+     ID_main_4 [label="main::store i32 0, i32* %2, align 4, !phasar.instruction.id !6, ID: 4"]
+     ID_main_6 [label="main::store i32 %4, i32* %3, align 4, !phasar.instruction.id !8, ID: 6"]
+     ID_main_1 [label="main::%2 = alloca i32, align 4, !phasar.instruction.id !3, ID: 1"]
+     ID_main_7 [label="main::%5 = load i32, i32* %3, align 4, !phasar.instruction.id !9, ID: 7"]
+
+ };
+
+ ID_main_2 -- ID_%1 = alloca i32, align 4, !phasar.instruction.id !2, ID: 0_0;
+ ID_main_2 -- ZERO;
+ ID_main_2 -- ID_%2 = alloca i32, align 4, !phasar.instruction.id !3, ID: 1_1;
+ ID_main_3 -- ID_%2 = alloca i32, align 4, !phasar.instruction.id !3, ID: 1_1;
+ ID_main_3 -- ID_%3 = alloca i32, align 4, !phasar.instruction.id !4, ID: 2_2;
+ ID_main_3 -- ZERO;
+ ID_main_3 -- ID_%1 = alloca i32, align 4, !phasar.instruction.id !2, ID: 0_0;
+ ID_main_0 -- ZERO;
+ ID_main_5 -- ZERO;
+ ID_main_5 -- ID_%3 = alloca i32, align 4, !phasar.instruction.id !4, ID: 2_2;
+ ID_main_8 -- ZERO;
+ ID_main_4 -- ZERO;
+ ID_main_4 -- ID_%2 = alloca i32, align 4, !phasar.instruction.id !3, ID: 1_1;
+ ID_main_4 -- ID_%3 = alloca i32, align 4, !phasar.instruction.id !4, ID: 2_2;
+ ID_main_6 -- ZERO;
+ ID_main_6 -- ID_%3 = alloca i32, align 4, !phasar.instruction.id !4, ID: 2_2;
+ ID_main_1 -- ID_%1 = alloca i32, align 4, !phasar.instruction.id !2, ID: 0_0;
+ ID_main_1 -- ZERO;
+ ID_main_7 -- ZERO;
  }
  #+end_example
 
@@ -180,6 +192,26 @@ I want something that makes vertice data. It should look like:
 Since we have fairly long labels, we want to generate simple IDs for them.
 The edges will be specified in terms of IDs.
 
+The format of nodes in the phasar output is:
+
+#+BEGIN_SRC 
+<function>::<instruction>,<alignment>,<phasar-instruction-id>,<id>"
+#+END_SRC
+
+For example:
+
+#+BEGIN_SRC 
+main::%1 = alloca i32, align 4, !phasar.instruction.id !2, ID: 0
+#+END_SRC
+
+Our ids will be of the format:
+
+#+BEGIN_SRC 
+<function>::<id>
+#+END_SRC
+
+That should be enough to identify nodes.
+
 #+NAME: make_vertices
 #+BEGIN_SRC python :noweb yes
 def make_id(vertex_name):
@@ -190,25 +222,19 @@ def make_id(vertex_name):
     if match_z:
         return "ZERO"
 
+    # The function name is what comes
+    # Before the '::' separator
     match = re.search("ID: ([0-9]+|-1)", vertex_name)
     if match:
-        return "ID_" + match.group(1)
-    
+        return "ID_{instr}".format(instr=match.group(1))
+
+
 
 def make_vertex(vertex_name):
     """
     A function that will return the vertex name between quotation marks
     """
-    # The result sometimes has the name
-    # of the method as a prefix
-    text = ""
-    if (re.match("[a-zA-Z]+::", vertex_name)):
-        # we return the suffix only
-        text = vertex_name.split("::")[1]
-    else:
-        text = vertex_name
-
-    return text[0:30]
+    return make_id(vertex_name) + " " + "[label=\"{0}\"]".format(vertex_name)
 
 
 def make_vertices(dataflow_data):
@@ -216,7 +242,7 @@ def make_vertices(dataflow_data):
     text = ""
     for v in dataflow_data:
         text += "\n"
-        text += make_id(v) + " " + "[label=\"{0}\"]".format(make_vertex(v))
+        text += make_vertex(v)
 
     return text
 
@@ -232,11 +258,13 @@ We can test the function:
 <<make_vertices>>
 print(make_id("%1, ID: 0"))
 print(make_id("@zero_value, ID: -1"))
+print(make_vertex("%1, ID: 0"))
 #+END_SRC
 
 #+RESULTS:
 : ID_0
 : ZERO
+: ID_0 [label="%1, ID: 0"]
 
 ** Making edges
 
@@ -252,6 +280,15 @@ This is how we write it in Python
 
 #+NAME: make_edges
 #+BEGIN_SRC python :results output :noweb yes
+def make_edge(vertex, target):
+    """
+    A function creating a spec for one edge
+    """
+    line = "{1} -> {0};".format(
+        make_id(vertex),
+        make_id(target))
+    return line
+    
 def make_edges(dataflow_data):
     """ A function that will create the string for edges spec"""
     text = ""
@@ -259,27 +296,168 @@ def make_edges(dataflow_data):
         facts = info["Facts"]
         targets = [f[0] for f in facts]
         for target in targets:
-            line = "{0} -- {1};".format(
-                make_id(vertex),
-                make_id(target))
-            text += line + "\n"
-
+            text += make_edge(vertex, target) + "\n"
     return text
 
 
 #+END_SRC
 
-We can test the function:
+#+RESULTS: make_edges
+
+We can test the function, with some example test data:
+
+#+NAME: example_data
+#+BEGIN_SRC python
+example_data = {"main::v1, ID: 1" : {"Facts" : [["v2, ID: 2", "BOTTOM"], ["zero, ID: -1", "BOTTOM"]]},
+                "f::v2, ID: 2": {"Facts" : [["zero, ID: -1", "BOTTOM"]]}}
+#+END_SRC
 
 #+BEGIN_SRC python :results output :noweb yes :exports both
 import re
 <<make_vertices>>
 <<make_edges>>
+<<example_data>>
 # A test
-print(make_edges({"v1, ID: 1" : {"Facts" : [["v2, ID: 2", "BOTTOM"], ["zero, ID: -1", "BOTTOM"]]}}))
+print(make_edges(example_data))
 #+END_SRC
 
 #+RESULTS:
+: ID_2 -- ZERO;
 : ID_1 -- ID_2;
 : ID_1 -- ZERO;
 : 
+
+** Handling subgraphs
+   
+We have several functions in the code. We may want to group these
+functions into separate subgraphs. You can put subgraphs into
+*clusters*, the clusters are subgraphs /whose name starts with the
+word cluster/.
+
+#+BEGIN_SRC dot :file dot_example.png
+graph g {
+    subgraph cluster_e {
+    style=filled;
+    color=lightgray;
+    label="The cluster e";
+    a -- b;
+    b -- d;
+    };
+    a -- c;
+}
+#+END_SRC
+
+#+RESULTS:
+[[file:dot_example.png]]
+
+For creating a cluster, we need to extract the name of the function analyzed from the identifier of the instruction.
+In our identifiers, the name of the function in the prefix of the instructions labels.
+
+The dataflow data is a list of sources. For each source, we have a number of targets. The source
+belongs to a function (and many source might belong to a given function), and has many targets
+which might or might not be inside the same function.
+
+Therefore, we need to group the sources (and their targets) by their function name.
+Then, for each function name (subgraph), we declare the edges like we used to do before.
+
+#+NAME: make_subgraphs
+#+BEGIN_SRC python :noweb yes
+def extract_function(instruction_label):
+    """
+    Returns the name of the function the instruction
+    is into"""
+    return instruction_label.split("::")[0]
+
+
+def group_by_function(dataflow_data):
+    """
+    A function that takes dataflow_data
+    and returns instructions grouped by
+    function name"""
+    groups = {}
+    for inst in dataflow_data:
+        # We get the key
+        function_label = extract_function(inst)
+	targets = [f[0] for f in dataflow_data[inst]['Facts']]
+	(source, targets) = (inst, targets)
+        if function_label in groups:
+            groups[function_label].append((source, targets)) 
+        else:
+            groups[function_label] = []
+            groups[function_label].append((source, targets)) 
+    return groups
+
+
+def make_subgraphs(dataflow_data):
+    """
+    A function taking dataflow data and
+    returning text for dot subgraphs for all functions
+    """
+    groups = group_by_function(dataflow_data)
+    subgraphs_text = ""
+    for (cluster_name, cluster_spec) in groups.items():
+        edges_defs = [make_edge(s, t) for (s, ts) in cluster_spec
+                      for t in ts]
+		      
+        # We put the vertices that are sources in this
+        # Subgraph too!
+        vertices = [make_vertex(s) for (s, ts) in cluster_spec]
+        vertices_text = ""
+        for s in vertices:
+            vertices_text += "    " + s + "\n"
+        
+        edges_text = ""
+        for e in edges_defs:
+            edges_text += "    " + e + "\n"
+
+            
+
+        subgraphs_text += """
+subgraph cluster_{cluster_name} {{
+    style=filled
+    color=lightgray
+    label=\"{cluster_name}\"
+{vertices_text}
+}};\n""".format(cluster_name=cluster_name,
+                vertices_text=vertices_text,
+                   edges_text=edges_text)
+	 
+    return subgraphs_text
+#+END_SRC
+
+#+RESULTS: make_subgraphs
+: None
+
+#+BEGIN_SRC python :noweb yes :results output
+<<imports>>
+<<example_data>>
+<<make_vertices>>
+<<make_edges>>
+<<make_subgraphs>>
+
+print(make_subgraphs(example_data))
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+
+subgraph cluster_main {
+    style=filled
+    color=lightgray
+    label="main"
+    ID_main_1 [label="main::v1, ID: 1"]
+
+};
+
+subgraph cluster_f {
+    style=filled
+    color=lightgray
+    label="f"
+    ID_f_2 [label="f::v2, ID: 2"]
+
+};
+
+#+end_example
+
+In the JSON file, the keys of the dictionary are already grouped by
+function label, so it should not be too hard to create the subgraphs

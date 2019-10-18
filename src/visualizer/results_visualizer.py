@@ -2,6 +2,7 @@
 import json
 import sys
 import re # For regular expressions.
+import textwrap
 
 # Utilities declarations
 def make_id(vertex_name):
@@ -12,25 +13,19 @@ def make_id(vertex_name):
     if match_z:
         return "ZERO"
 
+    # The function name is what comes
+    # Before the '::' separator
     match = re.search("ID: ([0-9]+|-1)", vertex_name)
     if match:
-        return "ID_" + match.group(1)
-    
+        return "ID_{instr}".format(instr=match.group(1))
+
+
 
 def make_vertex(vertex_name):
     """
     A function that will return the vertex name between quotation marks
     """
-    # The result sometimes has the name
-    # of the method as a prefix
-    text = ""
-    if (re.match("[a-zA-Z]+::", vertex_name)):
-        # we return the suffix only
-        text = vertex_name.split("::")[1]
-    else:
-        text = vertex_name
-
-    return text[0:30]
+    return make_id(vertex_name) + " " + "[label=\"{0}\"]".format(vertex_name)
 
 
 def make_vertices(dataflow_data):
@@ -38,11 +33,20 @@ def make_vertices(dataflow_data):
     text = ""
     for v in dataflow_data:
         text += "\n"
-        text += make_id(v) + " " + "[label=\"{0}\"]".format(make_vertex(v))
+        text += make_vertex(v)
 
     return text
 
 
+def make_edge(vertex, target):
+    """
+    A function creating a spec for one edge
+    """
+    line = "{1} -> {0};".format(
+        make_id(vertex),
+        make_id(target))
+    return line
+    
 def make_edges(dataflow_data):
     """ A function that will create the string for edges spec"""
     text = ""
@@ -50,17 +54,74 @@ def make_edges(dataflow_data):
         facts = info["Facts"]
         targets = [f[0] for f in facts]
         for target in targets:
-            line = "{0} -- {1};".format(
-                make_id(vertex),
-                make_id(target))
-            text += line + "\n"
-
+            text += make_edge(vertex, target) + "\n"
     return text
 
 
+def extract_function(instruction_label):
+    """
+    Returns the name of the function the instruction
+    is into"""
+    return instruction_label.split("::")[0]
+
+
+def group_by_function(dataflow_data):
+    """
+    A function that takes dataflow_data
+    and returns instructions grouped by
+    function name"""
+    groups = {}
+    for inst in dataflow_data:
+        # We get the key
+        function_label = extract_function(inst)
+	targets = [f[0] for f in dataflow_data[inst]['Facts']]
+	(source, targets) = (inst, targets)
+        if function_label in groups:
+            groups[function_label].append((source, targets)) 
+        else:
+            groups[function_label] = []
+            groups[function_label].append((source, targets)) 
+    return groups
+
+
+def make_subgraphs(dataflow_data):
+    """
+    A function taking dataflow data and
+    returning text for dot subgraphs for all functions
+    """
+    groups = group_by_function(dataflow_data)
+    subgraphs_text = ""
+    for (cluster_name, cluster_spec) in groups.items():
+        edges_defs = [make_edge(s, t) for (s, ts) in cluster_spec
+                      for t in ts]
+		      
+        # We put the vertices that are sources in this
+        # Subgraph too!
+        vertices = [make_vertex(s) for (s, ts) in cluster_spec]
+        vertices_text = ""
+        for s in vertices:
+            vertices_text += "    " + s + "\n"
+        
+        edges_text = ""
+        for e in edges_defs:
+            edges_text += "    " + e + "\n"
+
+            
+
+        subgraphs_text += """
+subgraph cluster_{cluster_name} {{
+    style=filled
+    color=lightgray
+    label=\"{cluster_name}\"
+{vertices_text}
+}};\n""".format(cluster_name=cluster_name,
+                vertices_text=vertices_text,
+                   edges_text=edges_text)
+	 
+    return subgraphs_text
 def make_graph(dataflow_data):
-    return 'graph DataFlow {{\n{vertices}\n{edges}}}'.format(
-        vertices=make_vertices(dataflow_data),
+    return 'digraph DataFlow {{\n{subgraphs}\n{edges}}}'.format(
+        subgraphs=make_subgraphs(dataflow_data),
         edges=make_edges(dataflow_data))
 
 
