@@ -13,7 +13,7 @@ LLVM_FLAGS := `llvm-config --cppflags`
 IFDSPluginSrc := MyIFDSProblem.cxx
 IFDSPlugin := $(patsubst %.cxx,%.so,$(IFDSPluginSrc))
 
-all: ifdsproblem
+all: run
 ifdsproblem: MyIFDSProblem.cxx MyIFDSProblem.h
 	$(CXX) $(CXX_FLAGS) $(INCLUDE_DIRS) $(LLVM_FLAGS) $(IFDSPluginSrc) -o $(IFDSPlugin)
 
