@@ -24,30 +24,7 @@ static void test_int (void)
   }
 }
 
-#if 0
-static void test_object (void)
-{
-  GObject *obj;
-  GValue obj_vala = G_VALUE_INIT;
-  GValue obj_valb = G_VALUE_INIT;
-  obj = g_object_new (VIEWER_TYPE_FILE, NULL);
 
-  g_value_init (&obj_vala, VIEWER_TYPE_FILE);
-  g_value_set_object (&obj_vala, obj);
-
-  g_value_init (&obj_valb, G_TYPE_OBJECT);
-
-  /* g_value_copy's semantics for G_TYPE_OBJECT types is to copy the reference.
-   * This function thus calls g_object_ref.
-   * It is interesting to note that the assignment works here because
-   * VIEWER_TYPE_FILE is a G_TYPE_OBJECT.
-   */
-  g_value_copy (&obj_vala, &obj_valb);
-
-  g_object_unref (G_OBJECT (obj));
-  g_object_unref (G_OBJECT (obj));
-}
-#endif
 
 int main() {
   test_int();
