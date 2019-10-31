@@ -1,35 +1,9 @@
 #include <glib.h>
 #include <glib-object.h>
+
 #include "viewer-file.h"
+#include "viewer-pink.h"
 
-/// Viewer file stuff
-
-
-// This type has to be defined by the user, its purpose is to hold private data
-// for the class.
-typedef struct {
-  int x;
-} ViewerFilePrivate;
-
-G_DEFINE_TYPE_WITH_PRIVATE (ViewerFile, viewer_file, G_TYPE_OBJECT)
-
-static void
-viewer_file_class_init (ViewerFileClass *klass)
-{
-  g_print("Viewer file class initialized\n");
-}
-
-static void
-viewer_file_init (ViewerFile *self)
-{
-  ViewerFilePrivate *priv = viewer_file_get_instance_private (self);
-
-  /* initialize all public and private members to reasonable default values.
-   * They are all automatically initialized to 0 to begin with. */
-  g_print("Viewer file object initialized\n");
-}
-
-/// End of Viewer file stuff
 static void test_object (void)
 {
   GObject *obj;
@@ -52,9 +26,17 @@ static void test_object (void)
   g_object_unref (G_OBJECT (obj));
   g_object_unref (G_OBJECT (obj));
 
-  GObject *otherobj = g_object_new(VIEWER_TYPE_FILE, NULL);
-  g_object_unref(G_OBJECT (otherobj));
+  GObject *pink = g_object_new(VIEWER_TYPE_PINK, NULL);
+  viewer_file_open(pink, NULL);
+  viewer_make_it_pink(pink);
+  g_object_unref(G_OBJECT (pink));
 
+  GObject *otherobj = g_object_new(VIEWER_TYPE_FILE, NULL);
+  ViewerFile *vf = VIEWER_FILE(otherobj); // cast to viewer file type
+  viewer_file_open(vf, NULL); // this is correct
+  ViewerPink *not_pink = VIEWER_PINK(vf); // this is not correct
+  viewer_make_it_pink(not_pink); // this should fail
+  g_object_unref(G_OBJECT (otherobj));
 }
 
 

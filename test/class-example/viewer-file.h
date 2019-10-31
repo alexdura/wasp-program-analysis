@@ -36,6 +36,7 @@ struct _ViewerFileClass
  * Method definitions.
  */
 ViewerFile *viewer_file_new (void);
+void viewer_file_open(ViewerFile *self, GError **error);
 
 G_END_DECLS
 
