@@ -47,13 +47,11 @@ docker run -it wasp-pa
     Then, you run this command to install LLVM into the ~/llvm/llvm_install~ directory.
 
     #+BEGIN_SRC bash
-    cmake -G "Ninja" -DLLVM_ENABLE_PROJECTS='clang;' -DCMAKE_INSTALL_PREFIX="../llvm_install" -DCMAKE_BUILD_TYPE=Debug -DLLVM_ENABLE_CXX1Y=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DBUILD_SHARED_LIBS=ON -DLLVM_BUILD_LLVM_DYLIB=ON ../llvm
+    cmake -G "Ninja" -DCMAKE_CXX_COMPILER='clang++' -DCMAKE_C_COMPILER='clang' -DLLVM_ENABLE_PROJECTS='clang;' -DCMAKE_INSTALL_PREFIX="../llvm_install" -DCMAKE_BUILD_TYPE=Debug -DLLVM_ENABLE_CXX1Y=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DBUILD_SHARED_LIBS=ON -DLLVM_BUILD_LLVM_DYLIB=ON ../llvm
     ninja
     ninja ocaml_doc # Not sure why this is needed, but it is.
     ninja install
     #+END_SRC
-
-    You may add ~-DCMAKE_CXX_COMPILER='clang++' -DCMAKE_C_COMPILER='clang'~ to build with clang.
 
 **** Phasar
      Then, to install phasar, from the root of the project:
