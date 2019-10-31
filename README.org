@@ -47,16 +47,18 @@ docker run -it wasp-pa
     And then, there are two options:
 
     #+BEGIN_SRC bash
-    cmake -G "Unix Makefiles" -DLLVM_ENABLE_PROJECTS='clang;clang-tools-extra;libcxx;libcxxabi;libunwind;lld;lldb;compiler-rt;lld;polly;debuginfo-tests;openmp;parallel-libs' -DCMAKE_BUILD_TYPE=Debug -DLLVM_ENABLE_CXX1Y=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DBUILD_SHARED_LIBS=ON -DLLVM_BUILD_LLVM_DYLIB=ON ../llvm
+    cmake -G "Unix Makefiles" -DLLVM_ENABLE_PROJECTS='clang;clang-tools-extra;libcxx;libcxxabi;libunwind;lld;compiler-rt;lld;debuginfo-tests;openmp;parallel-libs' -DCMAKE_BUILD_TYPE=Debug -DLLVM_ENABLE_CXX1Y=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DBUILD_SHARED_LIBS=ON -DLLVM_BUILD_LLVM_DYLIB=ON ../llvm
     #+END_SRC
 
     is for setting up a build with makefiles and,
 
     #+BEGIN_SRC bash
-    cmake -G "Ninja" -DLLVM_ENABLE_PROJECTS='clang;clang-tools-extra;libcxx;libcxxabi;libunwind;lld;lldb;compiler-rt;lld;polly;debuginfo-tests;openmp;parallel-libs' -DCMAKE_BUILD_TYPE=Debug -DLLVM_ENABLE_CXX1Y=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DBUILD_SHARED_LIBS=ON -DLLVM_BUILD_LLVM_DYLIB=ON ../llvm
+    cmake -G "Ninja" -DLLVM_ENABLE_PROJECTS='clang;clang-tools-extra;libcxx;libcxxabi;libunwind;lld;compiler-rt;lld;debuginfo-tests;openmp;parallel-libs' -DCMAKE_BUILD_TYPE=Debug -DLLVM_ENABLE_CXX1Y=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DBUILD_SHARED_LIBS=ON -DLLVM_BUILD_LLVM_DYLIB=ON ../llvm
     #+END_SRC
 
     For building with the ~ninja~ build tool. It is usually a bit faster.
+
+    You may add =-DCMAKE_CXX_COMPILER='clang++' -DCMAKE_C_COMPILER='clang'= to build with clang.
 *** Plugins
 
 The =phasar_src= directory contains examples, we are particularly interested in the =plugins= examples.
