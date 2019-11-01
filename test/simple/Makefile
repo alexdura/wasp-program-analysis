@@ -1,6 +1,5 @@
 # set this variable to the location where YOUR glib headers are installed
-GLIB_INSTALL_PREFIX ?= /usr
-# GLIB_INSTALL_PREFIX ?= /work/courses/project_course/glib/install/usr/local
+GLIB_INSTALL_PREFIX ?= /work/courses/project_course/glib/install/usr/local
 
 CXX := clang++
 CC := clang
