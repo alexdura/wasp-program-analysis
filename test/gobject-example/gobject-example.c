@@ -1,5 +1,5 @@
 #include <glib-object.h>
-#include "invalid-cast.h"
+#include "gobject-example.h"
 
 // This is needed because the class was declared using
 // G_DECLARE_FINAL_TYPE in the header file.

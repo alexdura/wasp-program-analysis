@@ -1,4 +1,4 @@
-// This is a test file for casting incorrectly a value in gObject
+// This is an minimalist example of how to create classes with gObject
 
 #ifndef __INVALID_CAST_H__
 #define __INVALID_CAST_H__

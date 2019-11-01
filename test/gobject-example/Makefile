@@ -19,4 +19,4 @@ all : $(TEST_PROGRAMS)
 	$(CC) $(CFLAGS) -o $@ $^
 
 clean:
-	rm invalid-cast
+	rm gobject-example
