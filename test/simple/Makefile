@@ -1,5 +1,6 @@
 # set this variable to the location where YOUR glib headers are installed
-GLIB_INSTALL_PREFIX ?= /work/courses/project_course/glib/install
+GLIB_INSTALL_PREFIX ?= /usr
+# GLIB_INSTALL_PREFIX ?= /work/courses/project_course/glib/install/usr/local
 
 CXX := clang++
 CC := clang
@@ -7,7 +8,7 @@ CC := clang
 TEST_SRCS := $(wildcard *.c)
 TEST_PROGRAMS := $(patsubst %.c,%,$(TEST_SRCS))
 
-INCLUDE_DIRS := -I$(GLIB_INSTALL_PREFIX)/usr/local/include/glib-2.0/ -I$(GLIB_INSTALL_PREFIX)/usr/local/lib/x86_64-linux-gnu/glib-2.0/include/
+INCLUDE_DIRS := -I$(GLIB_INSTALL_PREFIX)/include/glib-2.0/ -I$(GLIB_INSTALL_PREFIX)/lib/x86_64-linux-gnu/glib-2.0/include/
 LIB_DIRS := -L$(GLIB_INSTALL_PREFIX)/usr/local/lib/x86_64-linux-gnu/
 
 
@@ -17,3 +18,6 @@ all : $(TEST_PROGRAMS)
 
 % : %.c
 	$(CC) $(CFLAGS) -o $@ $^
+
+clean:
+	rm simple
