@@ -1,0 +1,53 @@
+#+TITLE: Castcheck, checking types in gObject
+#+AUTHOR: Noric Couderc, Alexandru Dura
+
+* Getting started
+  To start the analysis, you need to do
+  #+BEGIN_SRC bash
+  make
+  phasar --config <your-config-file>
+  #+END_SRC
+  
+* Appendix
+
+** Config file syntax
+   #+BEGIN_SRC 
+   module=./<file>.ll
+   data-flow-analysis=Plugin
+   analysis-plugin=./CastCheck.so
+   #+END_SRC
+   
+** Makefile
+   Here is the content of the makefile, to build the plugin
+   #+BEGIN_SRC makefile :tangle Makefile
+GLIB_INSTALL_PREFIX ?= /usr/
+CXX := clang++
+CC := clang
+CXX_FLAGS := -std=c++14
+CXX_FLAGS += -Wall
+CXX_FLAGS += -Wno-return-type-c-linkage
+CXX_FLAGS += -O0
+CXX_FLAGS += -fPIC
+CXX_FLAGS += -shared
+CXX_FLAGS += -g
+INCLUDE_DIRS ?= -I/include/wise_enum/
+LLVM_FLAGS := `llvm-config --cppflags`
+
+IFDSPluginSrc := CastCheck.cxx
+IFDSPlugin := $(patsubst %.cxx,%.so,$(IFDSPluginSrc))
+
+all: run
+castcheck: Castcheck.cxx Castcheck.h
+	$(CXX) $(CXX_FLAGS) $(INCLUDE_DIRS) $(LLVM_FLAGS) $(IFDSPluginSrc) -o $(IFDSPlugin)
+
+Test.ll: Test.c
+	$(CC) -S -g -emit-llvm Test.c
+
+clean:
+	rm -f $(IFDSPlugin)
+	rm -f *.dot
+	rm -f *.json
+
+run: Test.ll castcheck
+	phasar --config Test.c.ll.conf
+   #+END_SRC
