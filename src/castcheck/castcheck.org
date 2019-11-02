@@ -7,24 +7,182 @@
   make
   #+END_SRC
   The makefile builds and runs the analysis.
-  
+
 * Analysis
   The analysis should be divided into two phases.
   1. Finding the type hierarchy
   2. Checking for invalid type casts
 
 ** Finding the type hierarchy
+   This analysis tries to infer the type hierarchy from the provided source code.
+   First, we need to declare the class =TypeHierarchy= which is a subclass of =IFDSTabulationProblemPlugin=.
+   Implementing a plugin requires to implement some flow functions, in the next section.
 
+
+*** Header
+    #+BEGIN_SRC c++ :tangle TypeHierarchy.h
+
+    #+END_SRC
+
+*** Implemenatation
+    #+BEGIN_SRC c++ :tangle TypeHierarchy.cxx
+    #include "TypeHierarchy.h"
+    #+END_SRC
 ** Checking for invalid type casts
-   First, we need the header file:
-   #+BEGIN_SRC c++ :tangle CastCheck.h
+   This should be an IFDS analysis.
 
-   #+END_SRC
-   
-   Then we need the actual code file:
-   #+BEGIN_SRC c++ :tangle CastCheck.cxx
-   #include "CastCheck.h"
-   #+END_SRC
+   First, we need the header file:
+
+*** Header
+    Here we define the class =CastCheck=.
+    #+BEGIN_SRC c++ :noweb yes :tangle CastCheck.h
+      #ifndef CAST_CHECK_H_
+      #define CAST_CHECK_H_
+
+      #include <map>
+      #include <memory>
+      #include <phasar/PhasarLLVM/Plugins/Interfaces/IfdsIde/IFDSTabulationProblemPlugin.h>
+      #include <set>
+      #include <vector>
+
+      class CastCheck : public psr::IFDSTabulationProblemPlugin {
+      std::set<const llvm::Value*> TaintedValues;
+      std::map<const llvm::Instruction*, std::set<const llvm::Value*>> LeakMap;
+
+      public:
+      // Constructor
+      CastCheck(psr::LLVMBasedICFG &I, std::vector<std::string> EntryPoints);
+      // Destructor
+      ~CastCheck() = default;
+
+      <<flow_functions_header>>
+
+      std::map<const llvm::Instruction *, std::set<const llvm::Value *>>
+      initialSeeds() override;
+
+      void printIFDSReport(std::ostream &os,
+		      psr::SolverResults<const llvm::Instruction*,
+		      const llvm::Value*, psr::BinaryDomain> &SR) override;
+      };
+
+      extern "C" std::unique_ptr<psr::IFDSTabulationProblemPlugin>
+      makeCastCheck(psr::LLVMBasedICFG &I, std::vector<std::string> EntryPoints);
+
+      #endif
+    #+END_SRC
+
+*** Flow functions
+    Here, we declare the functions that will return the flow functions.
+    #+NAME:flow_functions_header
+    #+BEGIN_SRC c++
+    std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
+    getNormalFlowFunction(const llvm::Instruction *curr,
+		    const llvm::Instruction *succ) override;
+
+    std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
+    getCallFlowFunction(const llvm::Instruction *callStmt,
+		const llvm::Function *destMthd) override;
+
+    std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
+    getRetFlowFunction(const llvm::Instruction *callSite,
+		const llvm::Function *calleeMthd,
+		const llvm::Instruction *exitStmt,
+		const llvm::Instruction *retSite) override;
+
+    std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
+    getCallToRetFlowFunction(const llvm::Instruction *callSite,
+		    const llvm::Instruction *retSite,
+		    std::set<const llvm::Function *> callees) override;
+
+    std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
+    getSummaryFlowFunction(const llvm::Instruction *callStmt,
+		    const llvm::Function *destMthd) override;
+    #+END_SRC
+
+*** TODO Implementation
+    The implementation has several parts:
+    - Includes
+    - Construction, registering and destruction
+    - Flow functions
+      - Normal flow function
+      - Call flow function
+      - Return flow function
+      - Call to return flow function
+      - Summary flow function
+    - Initial seeds (What is this?)
+    - Printing of report
+
+    This code will be in the subsequent session,
+    but for now we set up a squeleton.
+    #+BEGIN_SRC c++ :noweb yes :tangle CastCheck.cxx
+    #include "CastCheck.h"
+    #include <iostream>
+    #include <iterator>
+    #include <phasar/PhasarLLVM/ControlFlow/LLVMBasedICFG.h>
+    #include <phasar/PhasarLLVM/IfdsIde/FlowFunctions/Gen.h>
+    #include <phasar/PhasarLLVM/IfdsIde/FlowFunctions/Identity.h>
+    #include <phasar/PhasarLLVM/IfdsIde/FlowFunctions/KillAll.h>
+    #include <phasar/PhasarLLVM/IfdsIde/FlowFunctions/LambdaFlow.h>
+
+    using namespace std;
+    using namespace psr; // Phasar
+    using namespace llvm;
+
+    // CONSTRUCTION, REGISTRATION, DESTRUCTION
+    <<construction_destruction>>
+    //<<flow_functions>>
+    //<<initial_seeds>>
+    //<<printing>>
+    #+END_SRC
+
+**** Construction, Registration, Destruction
+     This section is fairly straightforward. We need to declare
+     - A factory function that will call the constructor of the plugin class.
+     - Two attributes which will register the plugin into Phasar.
+
+     #+NAME:construction_destruction
+     #+BEGIN_SRC c++
+       // Factory function that is used to create an instance by the Phasar framework.
+       unique_ptr<IFDSTabulationProblemPlugin>
+       makeCastCheck(LLVMBasedICFG &I, vector<string> EntryPoints) {
+	   return unique_ptr<IFDSTabulationProblemPlugin>(
+	   new CastCheck(I, EntryPoints));
+       }
+
+       // Is executed on plug-in load and has to register this plug-in to Phasar.
+       __attribute__((constructor)) void init() {
+	  cout << "init - Cast check plugin\n";
+	  IFDSTabulationProblemPluginFactory["ifds_testplugin"] = &makeCastCheck;
+       }
+
+       // Is executed on unload, can be used to unregister the plug-in.
+       __attribute__((destructor)) void fini() { cout << "fini - Cast check plugin\n"; }
+
+       // Default constructor
+       CastCheck::CastCheck(LLVMBasedICFG &I, vector<string> EntryPoints)
+	  : IFDSTabulationProblemPlugin(I, EntryPoints), TaintedValues() {}
+     #+END_SRC
+
+**** Flow functions
+
+***** Normal flow function
+      I think this flow function is for LLVM instructions of type:
+      - alloca
+      - load
+      - store
+      - arithmetic
+
+      For allocations there is no issue, but stores are dangerous,
+      if I store a tainted value inside another variables, then is
+      becomes tainted as well:
+
+      #+BEGIN_SRC c++
+      #+END_SRC
+**** Initial seeds
+
+**** Printing
+
+
 * Appendix
 
 ** Config file syntax
@@ -35,7 +193,7 @@
    data-flow-analysis=Plugin
    analysis-plugin=./CastCheck.so
    #+END_SRC
-   
+
 ** Makefile
    Here is the content of the makefile, to build the plugin
    #+BEGIN_SRC makefile :tangle Makefile
