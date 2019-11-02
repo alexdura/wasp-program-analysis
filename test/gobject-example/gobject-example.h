@@ -11,7 +11,7 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE(MyDog, my_dog, MY, DOG, GObject)
 
 struct _MyDogClass {
-    GObjectClass parent_class;
+    GObjectClass my_parent_class;
 
     // We need to store the methods here
     void (* bark) (MyDog*);
@@ -28,4 +28,4 @@ void my_dog_dispose(MyDog* d);
 
 G_END_DECLS
 
-#endif 
+#endif
