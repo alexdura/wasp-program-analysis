@@ -15,9 +15,66 @@
 
 ** Finding the type hierarchy
    This analysis tries to infer the type hierarchy from the provided source code.
-   First, we need to declare the class =TypeHierarchy= which is a subclass of =IFDSTabulationProblemPlugin=.
-   Implementing a plugin requires to implement some flow functions, in the next section.
 
+   Class objects are stored as structs, and their first field is a pointer to the parent class object.
+   We need to find two things:
+   1. Identify which class objects are created (we want a list of all the class objects in the program)
+   2. We want to have access to their parent class pointer field, see where it points to.
+
+   If we get the full points-to graph, we can get this information.
+   We don't need the whole points-to graph: any node
+   that is pointing to something else than a class object does not really need
+   to be considered. We can use this fact for optimizing, when needed.
+
+   Pointers are =llvm::Value= objects.
+
+   For the next sections, we will use code from the =gobject-example=
+   file, available in the tests. It does three things:
+   1. Create an class dog, and one instance
+   2. Calls a method of that class (the bark method)
+   3. Destroys the object
+
+*** TODO Finding the class objects
+    The LLVM IR contains the line:
+    #+BEGIN_SRC
+    =%struct.MyDogClass = type { %struct._GObjectClass }=
+    #+END_SRC
+
+    Which seems to indicate that a class type is created
+    (but maybe it is only named like that by the user ?)
+
+    It also seems like the struct =MyDogClass= only contains
+    one field, of type =_GObjectClass=. If we can extract the type
+    of structs, then we will be able to know.
+    (Most likely, =llvm::Value= is where we should look).
+
+*** TODO Finding the pointer to their parent class
+    The =.ll= file contains the following line:
+    #+BEGIN_SRC
+    @my_dog_parent_class = internal global i8* null, align 8, !dbg !184
+    #+END_SRC
+
+    It seems this pointer always has a name ending in =_parent_class=.
+
+    - =@= seems to indicate that the variable is global.
+    - =internal= means the variable is only visible to functions in the file where it is defined
+      - similar to =static= in C.
+
+    In our example, this pointer is only part of a store
+    instruction in the function =my_dog_class_intern_init(i8*)=,
+    here is the beginning of this function (until the store)
+
+    #+BEGIN_SRC
+    %2 = alloca i8*, align 8
+    store i8* %0, i8** %2, align 8
+    call void @llvm.dbg.declare(metadata i8** %2, metadata !209, metadata !DIExpression()), !dbg !210
+    %3 = load i8*, i8** %2, align 8, !dbg !210
+    %4 = call i8* @g_type_class_peek_parent(i8* %3), !dbg !210
+    store i8* %4, i8** @my_dog_parent_class, align 8, !dbg !210
+    #+END_SRC
+
+    The function =g_type_class_peek_parent(i8*)= seems to be what we are looking for.
+    it will return the pointer to the parent class.
 
 *** Header
     #+BEGIN_SRC c++ :tangle TypeHierarchy.h
@@ -28,9 +85,11 @@
     #+BEGIN_SRC c++ :tangle TypeHierarchy.cxx
     #include "TypeHierarchy.h"
     #+END_SRC
+
 ** Checking for invalid type casts
    This should be an IFDS analysis.
-
+   First, we need to declare the class =CastCheck= which is a subclass of =IFDSTabulationProblemPlugin=.
+   Implementing a plugin requires to implement some flow functions, in the next section.
    First, we need the header file:
 
 *** Header
@@ -71,33 +130,33 @@
       #endif
     #+END_SRC
 
-*** Flow functions
-    Here, we declare the functions that will return the flow functions.
-    #+NAME:flow_functions_header
-    #+BEGIN_SRC c++
-    std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
-    getNormalFlowFunction(const llvm::Instruction *curr,
-		    const llvm::Instruction *succ) override;
+**** Flow functions
+     Here, we declare the functions that will return the flow functions.
+     #+NAME:flow_functions_header
+     #+BEGIN_SRC c++
+     std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
+     getNormalFlowFunction(const llvm::Instruction *curr,
+		     const llvm::Instruction *succ) override;
 
-    std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
-    getCallFlowFunction(const llvm::Instruction *callStmt,
-		const llvm::Function *destMthd) override;
+     std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
+     getCallFlowFunction(const llvm::Instruction *callStmt,
+		 const llvm::Function *destMthd) override;
 
-    std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
-    getRetFlowFunction(const llvm::Instruction *callSite,
-		const llvm::Function *calleeMthd,
-		const llvm::Instruction *exitStmt,
-		const llvm::Instruction *retSite) override;
+     std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
+     getRetFlowFunction(const llvm::Instruction *callSite,
+		 const llvm::Function *calleeMthd,
+		 const llvm::Instruction *exitStmt,
+		 const llvm::Instruction *retSite) override;
 
-    std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
-    getCallToRetFlowFunction(const llvm::Instruction *callSite,
-		    const llvm::Instruction *retSite,
-		    std::set<const llvm::Function *> callees) override;
+     std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
+     getCallToRetFlowFunction(const llvm::Instruction *callSite,
+		     const llvm::Instruction *retSite,
+		     std::set<const llvm::Function *> callees) override;
 
-    std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
-    getSummaryFlowFunction(const llvm::Instruction *callStmt,
-		    const llvm::Function *destMthd) override;
-    #+END_SRC
+     std::shared_ptr<psr::FlowFunction<const llvm::Value *>>
+     getSummaryFlowFunction(const llvm::Instruction *callStmt,
+		     const llvm::Function *destMthd) override;
+     #+END_SRC
 
 *** TODO Implementation
     The implementation has several parts:
@@ -181,7 +240,6 @@
 **** Initial seeds
 
 **** Printing
-
 
 * Appendix
 
