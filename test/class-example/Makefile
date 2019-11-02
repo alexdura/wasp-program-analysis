@@ -20,5 +20,5 @@ CFLAGS := -g -Wall -lglib-2.0 -lgobject-2.0 $(INCLUDE_DIRS) $(LIB_DIRS)
 class-example : $(TEST_OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
 
-# class-example.ll : $(TEST_SRCS)
-# 	$(CC) -S --emit-llvm $(CFLAGS) -o $@ $^
+class-example.ll : $(TEST_SRCS)
+	$(CC) -S -emit-llvm $(CFLAGS) $^

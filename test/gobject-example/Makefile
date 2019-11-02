@@ -18,5 +18,8 @@ all : $(TEST_PROGRAMS)
 % : %.c
 	$(CC) $(CFLAGS) -o $@ $^
 
+%.ll : %.c
+	$(CC) $(CFLAGS) -S -emit-llvm -o $@ $^
+
 clean:
 	rm gobject-example
