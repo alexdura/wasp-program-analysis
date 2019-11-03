@@ -1,3 +1,4 @@
+# How to make those more generic?
 GLIB_INSTALL_PREFIX ?= /usr/
 LLVM_INSTALL_PREFIX ?= /home/noric/Dev/wasp-project-course/wasp-program-analysis/llvm/llvm_install/bin
 PHASAR_INSTALL_PREFIX ?= /home/noric/Dev/wasp-project-course/wasp-program-analysis/phasar
@@ -16,9 +17,6 @@ CXX_FLAGS += -g
 INCLUDE_DIRS ?= -I$(PHASAR_INSTALL_PREFIX)/external/
 INCLUDE_DIRS += -I$(PHASAR_INSTALL_PREFIX)/external/wise_enum
 INCLUDE_DIRS += -I$(PHASAR_INSTALL_PREFIX)/include
-# Let's play hide and seek with the files
-INCLUDE_DIRS += -I$(PHASAR_INSTALL_PREFIX)/external/json/include/
-INCLUDE_DIRS += -I$(PHASAR_INSTALL_PREFIX)/external/json/include/nlohmann
 
 LLVM_FLAGS := `$(LLVM_INSTALL_PREFIX)/llvm-config --cppflags`
 
