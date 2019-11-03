@@ -2,6 +2,12 @@
 #+AUTHOR: Noric Couderc, Alexandru Dura
 
 * Getting started
+** Dependencies
+   You need:
+   - =phasar= within your PATH
+   - =json.hpp=
+   - probably some other things (please add them to this file!)
+** Starting
   To start the analysis on the example file, you need to do:
   #+BEGIN_SRC bash
   make
@@ -63,6 +69,9 @@
 
     Unfortunately, the function returns =void=, so we need
     to model the heap to know who might point to =%11=.
+
+    To do that, we should look at the types of analyses that are
+    available.
 
 *** TODO Finding the pointer to their parent class
     The =.ll= file contains the following line:
