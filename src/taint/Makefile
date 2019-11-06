@@ -7,7 +7,8 @@ CXX_FLAGS += -O0
 CXX_FLAGS += -fPIC
 CXX_FLAGS += -shared
 CXX_FLAGS += -g
-INCLUDE_DIRS ?= -I/usr/local/include/wise_enum/
+INCLUDE_DIRS ?= -I/usr/include/wise_enum/
+INCLUDE_DIRS += -I/home/noric/Dev/wasp-project-course/wasp-program-analysis/phasar/include
 LLVM_FLAGS := `llvm-config --cppflags`
 
 IFDSPluginSrc := MyIFDSProblem.cxx
@@ -18,7 +19,7 @@ ifdsproblem: MyIFDSProblem.cxx MyIFDSProblem.h
 	$(CXX) $(CXX_FLAGS) $(INCLUDE_DIRS) $(LLVM_FLAGS) $(IFDSPluginSrc) -o $(IFDSPlugin)
 
 Test.ll: Test.c
-	$(CC) -S -g -emit-llvm Test.c
+	$(CC) -S -emit-llvm Test.c
 
 clean:
 	rm -f $(IFDSPlugin)
