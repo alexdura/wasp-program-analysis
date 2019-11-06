@@ -35,6 +35,12 @@ docker run -it wasp-pa
 
 
 *** Building locally
+
+**** Configuration
+     Makefiles in the project need to know about where GLib, LLVM, Phasar and are installed.
+     The file =variables.mk= contains variables of paths you need to set for the makefiles
+     in the project to work.
+
 **** LLVM
     For this project, we need a debug version of LLVM.
     You may do as follows:
