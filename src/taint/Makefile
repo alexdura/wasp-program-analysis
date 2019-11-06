@@ -1,3 +1,4 @@
+include ../../variables.mk
 CXX := clang++
 CC := clang
 CXX_FLAGS := -std=c++14
@@ -7,8 +8,11 @@ CXX_FLAGS += -O0
 CXX_FLAGS += -fPIC
 CXX_FLAGS += -shared
 CXX_FLAGS += -g
-INCLUDE_DIRS ?= -I/usr/local/include/wise_enum/
-LLVM_FLAGS := `llvm-config --cppflags`
+INCLUDE_DIRS ?= -I$(WISE_ENUM_INCLUDE_PATH)
+INCLUDE_DIRS += -I$(PHASAR_INCLUDE_PATH)
+INCLUDE_DIRS += -I$(LLVM_INCLUDE_PATH)
+
+LLVM_FLAGS := $(shell $(LLVM_INSTALL_PREFIX)/bin/llvm-config --cppflags)
 
 IFDSPluginSrc := MyIFDSProblem.cxx
 IFDSPlugin := $(patsubst %.cxx,%.so,$(IFDSPluginSrc))
