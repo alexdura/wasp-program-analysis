@@ -7,6 +7,7 @@
    - =phasar= within your PATH
    - =json.hpp=
    - probably some other things (please add them to this file!)
+
 ** Starting
   To start the analysis on the example file, you need to do:
   #+BEGIN_SRC bash
@@ -19,8 +20,12 @@
   1. Finding the type hierarchy
   2. Checking for invalid type casts
 
-** Finding the type hierarchy
+** TODO Finding the type hierarchy
    This analysis tries to infer the type hierarchy from the provided source code.
+   What we want is a graph, where the vertices are types, and there is an edge
+   between two types if one is supposed to inherit another. Types that to not inherit
+   anything inherit a fake type. We could have them inherit GObject but the user
+   would have to write that explicitely in the code, so we will assume they inherit NULL.
 
    Class objects are stored as structs, and their first field is a pointer to the parent class object.
    We need to find two things:
@@ -32,6 +37,9 @@
    that is pointing to something else than a class object does not really need
    to be considered. We can use this fact for optimizing, when needed.
 
+   However, getting 1. and 2. might not be something we can't do in two separate passes.
+   We have to find if we can fit the analysis into an IFDS or IDE framework.
+
    Pointers are =llvm::Value= objects.
 
    For the next sections, we will use code from the =gobject-example=
@@ -40,38 +48,61 @@
    2. Calls a method of that class (the bark method)
    3. Destroys the object
 
-*** TODO Finding the class objects
-    The =.ll= file contains the following line:
-    #+BEGIN_SRC
-    =%struct.MyDogClass = type { %struct._GObjectClass }=
-    #+END_SRC
+*** Finding the class objects: One option
+    The function =g_type_register_static()=
+    Takes a parent type as first argument and returns a new type ID
 
-    Which seems to indicate that a class type is created
-    (but maybe it is only named like that by the user ?)
+    There is a =dynamic= version, that is probably used when loading
+    plugins. But GStreamer uses only =g_type_register_static()=,
+    =g_type_register_simple()= and =g_type_register_fundamental()=.
 
-    It also seems like the struct =MyDogClass= only contains
-    one field, of type =_GObjectClass=. If we can extract the type
-    of structs, then we will be able to know.
-    (Most likely, =llvm::Value= is where we should look).
+    GObject creates =<class_name>_get_type_once()= for getting the type ID
+    of the class, for each class the user has created. This is called
+    by a =<class_name>_get_type()= function that is also generated.
 
-    We know the class should be created dynamically, therefore,
-    we can try to look if there is a =MyDogClass= struct created
-    anywhere in the file.
+    These functions are called when you want to create an object.
+    The type ID is created on the first call to =get_type()=.
 
-    There is a function =@my_dog_class_intern_init(i8*)=, which
-    probably creates this MyDogClass object, since it contains
-    a =bitcast= to =%struct.MyDogClass*=:
-    #+BEGIN_SRC
-    %11 = bitcast i8* %10 to %struct.MyDogClass*, !dbg !210
-    #+END_SRC
+    =get_type_once()= calls the =get_type()= function of the parent type.
+    So one possibility to figure out the type hierarchy is to look
+    at those functions.
 
-    So we know that =%11= in this function is a =MyDogClass=.
+**** Finding the class objects: Another option?
+     The =.ll= file contains the following line:
+     #+BEGIN_SRC
+     %struct.MyDogClass = type { %struct._GObjectClass }
+     #+END_SRC
 
-    Unfortunately, the function returns =void=, so we need
-    to model the heap to know who might point to =%11=.
+     Which seems to indicate that a class type is created
+     (but maybe it is only named like that by the user ?)
 
-    To do that, we should look at the types of analyses that are
-    available.
+     It also seems like the struct =MyDogClass= only contains
+     one field, of type =_GObjectClass=. If we can extract the type
+     of structs, then we will be able to know.
+     (Most likely, =llvm::Value= is where we should look).
+
+     We know the class should be created dynamically, therefore,
+     we can try to look if there is a =MyDogClass= struct created
+     anywhere in the file.
+
+     There is a function =@my_dog_class_intern_init(i8*)=, which
+     probably creates this MyDogClass object, since it contains
+     a =bitcast= to =%struct.MyDogClass*=:
+     #+BEGIN_SRC
+     %11 = bitcast i8* %10 to %struct.MyDogClass*, !dbg !210
+     #+END_SRC
+
+     So we know that =%11= in this function is a =MyDogClass=.
+
+     Unfortunately, the function returns =void=, so we need
+     to model the heap to know who might point to =%11=.
+
+
+*** Phasar useful things
+    The class =ProjectIRDB= gives you access to a lot of information
+    about the LLVM IR you have loeaded.
+    The plugin takes an =LLVMBasedICFG= which is a class representing
+    the control flow graph.
 
 *** TODO Finding the pointer to their parent class
     The =.ll= file contains the following line:
@@ -101,6 +132,7 @@
     The function =g_type_class_peek_parent(i8*)= seems to be what we are looking for.
     it will return the pointer to the parent class.
 
+
 *** Header
     #+BEGIN_SRC c++ :tangle TypeHierarchy.h
 
@@ -111,7 +143,7 @@
     #include "TypeHierarchy.h"
     #+END_SRC
 
-** Checking for invalid type casts
+** TODO Checking for invalid type casts
    This should be an IFDS analysis.
    First, we need to declare the class =CastCheck= which is a subclass of =IFDSTabulationProblemPlugin=.
    Implementing a plugin requires to implement some flow functions, in the next section.
