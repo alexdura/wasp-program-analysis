@@ -1,7 +1,4 @@
-# How to make those more generic?
-GLIB_INSTALL_PREFIX ?= /usr/
-LLVM_INSTALL_PREFIX ?= /home/noric/Dev/wasp-project-course/wasp-program-analysis/llvm/llvm_install/bin
-PHASAR_INSTALL_PREFIX ?= /home/noric/Dev/wasp-project-course/wasp-program-analysis/phasar
+include ../../variables.mk
 
 CXX := clang++
 CC := clang
@@ -14,11 +11,11 @@ CXX_FLAGS += -shared
 CXX_FLAGS += -g
 
 # Explaining once again to your compiler where everything is...
-INCLUDE_DIRS ?= -I$(PHASAR_INSTALL_PREFIX)/external/
-INCLUDE_DIRS += -I$(PHASAR_INSTALL_PREFIX)/external/wise_enum
-INCLUDE_DIRS += -I$(PHASAR_INSTALL_PREFIX)/include
+INCLUDE_DIRS ?= -I$(PHASAR_INCLUDE_PATH)
+INCLUDE_DIRS += -I$(LLVM_INCLUDE_PATH)
+INCLUDE_DIRS += -I$(WISE_ENUM_INCLUDE_PATH)
 
-LLVM_FLAGS := `$(LLVM_INSTALL_PREFIX)/llvm-config --cppflags`
+LLVM_FLAGS := `$(LLVM_INSTALL_PREFIX)/bin/llvm-config --cppflags`
 
 IFDSPluginSrc := CastCheck.cxx
 IFDSPlugin := $(patsubst %.cxx,%.so,$(IFDSPluginSrc))
@@ -33,4 +30,4 @@ clean:
 	rm -f *.json
 
 run: gobject-example.c.ll.conf castcheck
-	phasar --config gobject-example.c.ll.conf
+	$(PHASAR_INSTALL_PREFIX)/build/phasar --config gobject-example.c.ll.conf
