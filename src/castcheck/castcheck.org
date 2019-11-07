@@ -60,12 +60,33 @@
     of the class, for each class the user has created. This is called
     by a =<class_name>_get_type()= function that is also generated.
 
-    These functions are called when you want to create an object.
-    The type ID is created on the first call to =get_type()=.
-
     =get_type_once()= calls the =get_type()= function of the parent type.
     So one possibility to figure out the type hierarchy is to look
     at those functions.
+
+    These functions are called when you want to create an object.
+    The type ID is created on the first call to =get_type()=.
+
+    So, for finding the type hierarchy:
+    - for each function of the module, if the function name ends with =get_type_once()=...
+      - for each block in the function
+	- for each instruction in the block
+	  - if it is a function, if the name of the function ends with =get_type()=, it is the call to the parent. And we can register it as an edge.
+
+    This seems that in the case of our example, this did not work, because the function =get_type_once()= was not called.
+    Maybe this depends of the macro that you call (=G_DEFINE_TYPE_WITH_PRIVATE=, or =G_DEFINE_TYPE=).
+
+    =g_type_register_static_simple()= declares a new type with the parent type as the first argument,
+    either as a constant or as a result to calling =<class_name>_get_type()=.
+    it is present both for types that are supposed to be inherited and types which aren't.
+
+    This is called inside functions which are =<class_name>_get_type()= and =<class_name>_get_type_once()=.
+    So if you find a call to =g_type_register_static_simple()=, we can find
+    1. The first argument of the function
+    2. The =<class_name>= of the function where are into, if any.
+
+    Then we know both the type and its parent type.
+
 
 **** Finding the class objects: Another option?
      The =.ll= file contains the following line:
