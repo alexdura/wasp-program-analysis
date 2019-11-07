@@ -48,118 +48,30 @@
    2. Calls a method of that class (the bark method)
    3. Destroys the object
 
-*** Finding the class objects: One option
-    The function =g_type_register_static()=
-    Takes a parent type as first argument and returns a new type ID
+*** Finding the type hierarchy
+    For finding the type hierarchy, we need to look at the functions
+    calls =<class_name>_get_type_once()= and =<class_name>_get_type()=.
+    
+    These function call =g_type_register_static()= and =g_type_register_static_simple()=
+    with the type of the parent as the first argument.
 
-    There is a =dynamic= version, that is probably used when loading
-    plugins. But GStreamer uses only =g_type_register_static()=,
-    =g_type_register_simple()= and =g_type_register_fundamental()=.
-
-    GObject creates =<class_name>_get_type_once()= for getting the type ID
-    of the class, for each class the user has created. This is called
-    by a =<class_name>_get_type()= function that is also generated.
-
-    =get_type_once()= calls the =get_type()= function of the parent type.
-    So one possibility to figure out the type hierarchy is to look
-    at those functions.
-
-    These functions are called when you want to create an object.
-    The type ID is created on the first call to =get_type()=.
-
-    So, for finding the type hierarchy:
-    - for each function of the module, if the function name ends with =get_type_once()=...
-      - for each block in the function
-	- for each instruction in the block
-	  - if it is a function, if the name of the function ends with =get_type()=, it is the call to the parent. And we can register it as an edge.
-
-    This seems that in the case of our example, this did not work, because the function =get_type_once()= was not called.
-    Maybe this depends of the macro that you call (=G_DEFINE_TYPE_WITH_PRIVATE=, or =G_DEFINE_TYPE=).
-
-    =g_type_register_static_simple()= declares a new type with the parent type as the first argument,
-    either as a constant or as a result to calling =<class_name>_get_type()=.
-    it is present both for types that are supposed to be inherited and types which aren't.
-
-    This is called inside functions which are =<class_name>_get_type()= and =<class_name>_get_type_once()=.
-    So if you find a call to =g_type_register_static_simple()=, we can find
-    1. The first argument of the function
-    2. The =<class_name>= of the function where are into, if any.
-
-    Then we know both the type and its parent type.
-
-
-**** Finding the class objects: Another option?
-     The =.ll= file contains the following line:
-     #+BEGIN_SRC
-     %struct.MyDogClass = type { %struct._GObjectClass }
-     #+END_SRC
-
-     Which seems to indicate that a class type is created
-     (but maybe it is only named like that by the user ?)
-
-     It also seems like the struct =MyDogClass= only contains
-     one field, of type =_GObjectClass=. If we can extract the type
-     of structs, then we will be able to know.
-     (Most likely, =llvm::Value= is where we should look).
-
-     We know the class should be created dynamically, therefore,
-     we can try to look if there is a =MyDogClass= struct created
-     anywhere in the file.
-
-     There is a function =@my_dog_class_intern_init(i8*)=, which
-     probably creates this MyDogClass object, since it contains
-     a =bitcast= to =%struct.MyDogClass*=:
-     #+BEGIN_SRC
-     %11 = bitcast i8* %10 to %struct.MyDogClass*, !dbg !210
-     #+END_SRC
-
-     So we know that =%11= in this function is a =MyDogClass=.
-
-     Unfortunately, the function returns =void=, so we need
-     to model the heap to know who might point to =%11=.
-
-
+    This argument can be either:
+    1. The number 80, when the type inherits from GObject.
+    2. The result of a call to a =<class_name>_get_type()=.
+       
 *** Phasar useful things
     The class =ProjectIRDB= gives you access to a lot of information
     about the LLVM IR you have loeaded.
     The plugin takes an =LLVMBasedICFG= which is a class representing
     the control flow graph.
 
-*** TODO Finding the pointer to their parent class
-    The =.ll= file contains the following line:
-    #+BEGIN_SRC
-    @my_dog_parent_class = internal global i8* null, align 8, !dbg !184
-    #+END_SRC
-
-    It seems this pointer always has a name ending in =_parent_class=.
-
-    - =@= seems to indicate that the variable is global.
-    - =internal= means the variable is only visible to functions in the file where it is defined
-      - similar to =static= in C.
-
-    In our example, this pointer is only part of a store
-    instruction in the function =my_dog_class_intern_init(i8*)=,
-    here is the beginning of this function (until the store)
-
-    #+BEGIN_SRC
-    %2 = alloca i8*, align 8
-    store i8* %0, i8** %2, align 8
-    call void @llvm.dbg.declare(metadata i8** %2, metadata !209, metadata !DIExpression()), !dbg !210
-    %3 = load i8*, i8** %2, align 8, !dbg !210
-    %4 = call i8* @g_type_class_peek_parent(i8* %3), !dbg !210
-    store i8* %4, i8** @my_dog_parent_class, align 8, !dbg !210
-    #+END_SRC
-
-    The function =g_type_class_peek_parent(i8*)= seems to be what we are looking for.
-    it will return the pointer to the parent class.
-
-
-*** Header
+*** TODO Header
     #+BEGIN_SRC c++ :tangle TypeHierarchy.h
 
     #+END_SRC
 
-*** Implemenatation
+    
+*** TODO Implemenatation
     #+BEGIN_SRC c++ :tangle TypeHierarchy.cxx
     #include "TypeHierarchy.h"
     #+END_SRC
