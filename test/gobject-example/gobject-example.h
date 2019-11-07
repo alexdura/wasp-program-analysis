@@ -7,6 +7,8 @@
 
 G_BEGIN_DECLS
 
+// my_dog_get_type() is declared automatically
+// when you do G_DECLARE_FINAL_TYPE
 #define MY_DOG_TYPE my_dog_get_type()
 G_DECLARE_FINAL_TYPE(MyDog, my_dog, MY, DOG, GObject)
 
