@@ -25,4 +25,4 @@ clean:
 	rm *.ll
 
 run: example.ll
-	$(PHASAR_INSTALL_PREFIX)/build/phasar --config example.c.ll.conf
+	LD_LIBRARY_PATH=$(PHASAR_LIBRARY_PATH) $(PHASAR_BINARY_PATH)/phasar --config example.c.ll.conf

@@ -27,3 +27,6 @@ LLVM_INCLUDE_PATH ?= $(LLVM_INSTALL_PREFIX)/include
 
 # wise_enum
 WISE_ENUM_INCLUDE_PATH ?= $(PHASAR_INCLUDE_PATH)/wise_enum
+
+# The path for the libraries needed to run Phasar
+PHASAR_LIBRARY_PATH ?= $(PHASAR_INSTALL_PREFIX)/lib:$(LLVM_INSTALL_PREFIX)/lib
