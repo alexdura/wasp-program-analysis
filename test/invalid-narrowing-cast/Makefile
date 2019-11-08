@@ -36,3 +36,6 @@ clean :
 	rm test
 	rm test.ll
 	rm test.bc
+
+run : test.c.ll.conf test.ll
+	LD_LIBRARY_PATH=$(PHASAR_INSTALL_PREFIX)/lib:$(LLVM_INSTALL_PREFIX)/lib $(PHASAR_INSTALL_PREFIX)/bin/phasar --config=$<

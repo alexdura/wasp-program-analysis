@@ -15,7 +15,10 @@ GLIB_CONFIG_INCLUDE_PATH = $(GLIB_LIB_PATH)/glib-2.0/include/
 PHASAR_INSTALL_PREFIX ?= /home/noric/Dev/wasp-project-course/wasp-program-analysis/phasar
 
 # We derive the include path automatically
-PHASAR_INCLUDE_PATH = $(PHASAR_INSTALL_PREFIX)/include
+PHASAR_INCLUDE_PATH ?= $(PHASAR_INSTALL_PREFIX)/include
+
+# The path for the Phasar binary
+PHASAR_BINARY_PATH ?= $(PHASAR_INSTALL_PREFIX)/build
 
 # LLVM
 LLVM_INSTALL_PREFIX ?= /home/noric/Dev/wasp-project-course/wasp-program-analysis/llvm/llvm_install
