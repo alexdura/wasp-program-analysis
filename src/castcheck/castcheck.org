@@ -20,7 +20,7 @@
   1. Finding the type hierarchy
   2. Checking for invalid type casts
 
-** TODO Finding the type hierarchy
+** DONE Finding the type hierarchy
    This analysis tries to infer the type hierarchy from the provided source code.
    What we want is a graph, where the vertices are types, and there is an edge
    between two types if one is supposed to inherit another. Types that to not inherit
@@ -51,14 +51,14 @@
 *** Finding the type hierarchy
     For finding the type hierarchy, we need to look at the functions
     calls =<class_name>_get_type_once()= and =<class_name>_get_type()=.
-    
+
     These function call =g_type_register_static()= and =g_type_register_static_simple()=
     with the type of the parent as the first argument.
 
     This argument can be either:
     1. The number 80, when the type inherits from GObject.
     2. The result of a call to a =<class_name>_get_type()=.
-       
+
 *** Phasar useful things
     The class =ProjectIRDB= gives you access to a lot of information
     about the LLVM IR you have loeaded.
@@ -70,7 +70,7 @@
 
     #+END_SRC
 
-    
+
 *** TODO Implemenatation
     #+BEGIN_SRC c++ :tangle TypeHierarchy.cxx
     #include "TypeHierarchy.h"
@@ -78,9 +78,27 @@
 
 ** TODO Checking for invalid type casts
    This should be an IFDS analysis.
-   First, we need to declare the class =CastCheck= which is a subclass of =IFDSTabulationProblemPlugin=.
-   Implementing a plugin requires to implement some flow functions, in the next section.
-   First, we need the header file:
+   We implemented the IFDS analysis as a subclass of =LLVMDefaultIFDSTabulationProblem=
+   (directly in the Phasar codebase).
+
+*** Zero values
+    IFDS analysis is about looking at each statement, and figuring out what flows into what
+    after the statement. We need to have several zero values, one for
+    each of the declared types in the program.
+
+**** TODO Write notes about the wierd handling of zeroes in Phasar
+     The "zero values" are values that are not part of the code
+     but can still flow into variables (from our perspective).
+     In our case, the zero values are types.
+
+     The thing is, these zero values have to be =llvm::Value=, so we create
+     a zero module where they are declared as globals. These values have to be
+     of type =llvm::Value= because separating those in two different types
+     would have a runtime cost.
+
+     We go through the code, and for each call to =<class_name>_get_type=, we
+     create "seeds", to say that starting from the =get_type= call, the value
+     we created to represent the type can flow somewhere.
 
 *** Header
     Here we define the class =CastCheck=.
