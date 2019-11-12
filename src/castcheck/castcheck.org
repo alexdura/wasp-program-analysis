@@ -100,6 +100,16 @@
      create "seeds", to say that starting from the =get_type= call, the value
      we created to represent the type can flow somewhere.
 
+     Actually, the IFDS analysis framework does not seem to support having
+     multiple "zero" values (the paper about Phasar seems to indicate
+     it does, so it's not certain). This is an issue for us, since the
+     dataflow graph is expanded only if the zero values flow into it.
+
+     We are now considering an IDE analysis instead, which seemingly scales
+     better when you want to keep information on your variables (in our case
+     their type). Instead of hacking the IFDS framework, it seems to make more
+     sense to use IDE. How does IDE work though?
+
 *** Header
     Here we define the class =CastCheck=.
     #+BEGIN_SRC c++ :noweb yes :tangle CastCheck.h
