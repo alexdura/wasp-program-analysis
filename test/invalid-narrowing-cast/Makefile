@@ -1,7 +1,7 @@
 include ../../variables.mk
 
-CXX := clang++
-CC := clang
+CXX := $(LLVM_INSTALL_PREFIX)/bin/clang++
+CC := $(LLVM_INSTALL_PREFIX)/bin/clang
 
 TEST_SRCS := $(wildcard *.c)
 TEST_OBJS := $(patsubst %.c,%.o,$(TEST_SRCS))
@@ -16,19 +16,19 @@ CFLAGS := -Wall -lglib-2.0 -lgobject-2.0 $(INCLUDE_DIRS) $(LIB_DIRS)
 all: test test.ll
 
 %.o : %.c $(INCLUDES)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	LD_LIBRARY_PATH=$(PHASAR_INSTALL_PREFIX)/lib:$(LLVM_INSTALL_PREFIX)/lib $(CC) $(CFLAGS) -c -o $@ $<
 
 %.ll : %.c $(INCLUDES)
-	$(CC) $(CFLAGS) -S -emit-llvm -o $@ $<
+	LD_LIBRARY_PATH=$(PHASAR_INSTALL_PREFIX)/lib:$(LLVM_INSTALL_PREFIX)/lib $(CC) $(CFLAGS) -g -S -emit-llvm -o $@ $<
 
 test : $(TEST_OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+	LD_LIBRARY_PATH=$(PHASAR_INSTALL_PREFIX)/lib:$(LLVM_INSTALL_PREFIX)/lib $(CC) $(CFLAGS) -o $@ $^
 
 test.bc : $(TEST_LLS)
-	$(LLVM_INSTALL_PREFIX)/bin/llvm-link $^ -o $@
+	LD_LIBRARY_PATH=$(PHASAR_INSTALL_PREFIX)/lib:$(LLVM_INSTALL_PREFIX)/lib $(LLVM_INSTALL_PREFIX)/bin/llvm-link $^ -o $@
 
 test.ll : test.bc
-	$(LLVM_INSTALL_PREFIX)/bin/llvm-dis test.bc
+	LD_LIBRARY_PATH=$(PHASAR_INSTALL_PREFIX)/lib:$(LLVM_INSTALL_PREFIX)/lib $(LLVM_INSTALL_PREFIX)/bin/llvm-dis test.bc
 
 clean :
 	rm $(TEST_OBJS)
