@@ -78,4 +78,4 @@ The =phasar_src= directory contains examples, we are particularly interested in 
 ** Troubleshooting
 
 *** I get a stack overflow
-    You can increate the stack size of programs using =ulimit -s=.
+    You can increase the stack size of programs using =ulimit -s=.
