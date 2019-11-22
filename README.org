@@ -74,3 +74,8 @@ docker run -it wasp-pa
 *** Plugins
 
 The =phasar_src= directory contains examples, we are particularly interested in the =plugins= examples.
+
+** Troubleshooting
+
+*** I get a stack overflow
+    You can increate the stack size of programs using =ulimit -s=.
