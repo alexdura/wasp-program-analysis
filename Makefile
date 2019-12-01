@@ -17,6 +17,8 @@ GST_LIB_IR=$(patsubst %.bc,%.ll,$(GST_LIB_BC))
 gstreamer :
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(LLVM_INSTALL_PREFIX)/lib PATH=$(LLVM_INSTALL_PREFIX)/bin:$(PATH) ./build-gstreamer.sh
 
+all : all-reports
+
 %.ll : %.bc
 	PATH=$(LLVM_INSTALL_PREFIX)/bin:$(PATH) llvm-dis $^
 
@@ -27,6 +29,8 @@ TEST_PREFIX := $(GST_PREFIX)/build/subprojects/gst-plugins-bad/tests/check
 
 TEST_BC := $(wildcard $(TEST_PREFIX)/*.bc)
 TEST_LL := $(patsubst %.bc,%.ll,$(TEST_BC))
+
+CG_ANALYSIS ?= OTF # CHA, RTA, etc.
 
 # Build all test .ll files
 tests-ll : $(TEST_LL)
@@ -39,9 +43,13 @@ blank := $(empty) $(empty)
 
 # Generate analysis reports for all tests
 %.linked.report : %.linked.ll
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(PHASAR_INSTALL_PREFIX)/lib:$(LLVM_INSTALL_PREFIX)/lib $(PHASAR_BINARY_PATH)/phasar --data-flow-analysis=IDE_GObjAnalysis --pointer-analysis=CFLAnders --callgraph-analysis=CHA --module=$< --output=$@
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(PHASAR_INSTALL_PREFIX)/lib:$(LLVM_INSTALL_PREFIX)/lib $(PHASAR_BINARY_PATH)/phasar --data-flow-analysis=IDE_GObjAnalysis --pointer-analysis=CFLAnders --callgraph-analysis=$(CG_ANALYSIS) --module=$< --output=$@
 
 
 # Generate analysis reports for all tests
 %.report : %.ll $(GST_LIB_IR)
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(PHASAR_INSTALL_PREFIX)/lib:$(LLVM_INSTALL_PREFIX)/lib $(PHASAR_BINARY_PATH)/phasar --data-flow-analysis=IDE_GObjAnalysis --pointer-analysis=CFLAnders --callgraph-analysis=CHA $(addprefix "--module=", $^) --output=$@
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(PHASAR_INSTALL_PREFIX)/lib:$(LLVM_INSTALL_PREFIX)/lib $(PHASAR_BINARY_PATH)/phasar --data-flow-analysis=IDE_GObjAnalysis --pointer-analysis=CFLAnders --callgraph-analysis=$(CG_ANALYSIS) $(addprefix "--module=", $^) --output=$@
+
+ALL_REPORTS := $(patsubst %.ll,%.linked.report,$(TEST_LL))
+
+all-reports : $(ALL_REPORTS)
