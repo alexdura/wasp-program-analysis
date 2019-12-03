@@ -31,8 +31,8 @@ struct _AnimalCatClass
   GObjectClass parent_class;
 
 
-  void (* open) (AnimalFelid *file,
-		 GError     **error);
+  void (* jump) (AnimalFelid *opponent,
+		  GError     **error);
   void (* meow) (void);
 
 

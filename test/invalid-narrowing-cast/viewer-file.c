@@ -12,15 +12,15 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE (AnimalFelid, animal_felid, G_TYPE_OBJECT)
 
 static void
-animal_felid_open_impl(AnimalFelid *self, GError **error) {
-  g_print("ANIMAL_FELID: Print file opened\n");
+animal_felid_jump_impl(AnimalFelid *self, GError **error) {
+  g_print("ANIMAL_FELID: Boing! \n");
 }
 
 static void
 animal_felid_class_init (AnimalFelidClass *klass)
 {
-  klass->open = animal_felid_open_impl;
-  g_print("Viewer file class initialized\n");
+  klass->jump = animal_felid_jump_impl;
+  g_print("FELID INITIALIZED \n");
 }
 
 static void
@@ -33,8 +33,8 @@ animal_felid_init (AnimalFelid *self)
   g_print("Felid object initialized\n");
 }
 
-void animal_felid_open(AnimalFelid *self, GError **error) {
+void animal_felid_jump(AnimalFelid *self, GError **error) {
   AnimalFelidClass *klass;
   klass = ANIMAL_FELID_GET_CLASS (self);
-  klass->open(self, error);
+  klass->jump(self, error);
 }

@@ -8,19 +8,19 @@
 G_DEFINE_TYPE(AnimalCat, animal_cat, ANIMAL_FELID_TYPE)
 
 static void
-animal_cat_make_it_pink_impl(void) {
-  g_print("CAT: made it pink\n");
+animal_cat_meow_impl(void) {
+  g_print("CAT: meow\n");
 }
 
 static void
-animal_cat_open_impl(AnimalFelid *self, GError **error) {
-  g_print("CAT: Pink viewer opened\n");
+animal_cat_fight_impl(AnimalFelid *self, GError **error) {
+  g_print("CAT: Boing \n");
 }
 
 static void
 animal_cat_class_init(AnimalCatClass *klass) {
-  klass->meow = animal_cat_make_it_pink_impl;
-  klass->open = animal_cat_open_impl;
+  klass->meow = animal_cat_meow_impl;
+  klass->jump = animal_cat_fight_impl;
   g_print("CAT INITIALIZED \n");
 }
 

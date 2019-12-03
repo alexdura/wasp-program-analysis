@@ -24,7 +24,7 @@ struct _AnimalFelidClass
   GObjectClass parent_class;
 
   /* Class virtual function fields. */
-  void (* open) (AnimalFelid *file,
+  void (* jump) (AnimalFelid *self,
 		 GError     **error);
 
   /* Padding to allow adding up to 12 new virtual functions without
@@ -36,7 +36,7 @@ struct _AnimalFelidClass
  * Method definitions.
  */
 AnimalFelid *animal_felid_new (void);
-void animal_felid_open(AnimalFelid *self, GError **error);
+void animal_felid_jump(AnimalFelid *self, GError **error);
 
 G_END_DECLS
 
