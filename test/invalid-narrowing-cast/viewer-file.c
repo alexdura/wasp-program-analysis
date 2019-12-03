@@ -7,34 +7,34 @@
 // for the class.
 typedef struct {
   int x;
-} ViewerFilePrivate;
+} AnimalFelidPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (ViewerFile, viewer_file, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (AnimalFelid, animal_felid, G_TYPE_OBJECT)
 
 static void
-viewer_file_open_impl(ViewerFile *self, GError **error) {
-  g_print("VIEWER_FILE: Print file opened\n");
+animal_felid_open_impl(AnimalFelid *self, GError **error) {
+  g_print("ANIMAL_FELID: Print file opened\n");
 }
 
 static void
-viewer_file_class_init (ViewerFileClass *klass)
+animal_felid_class_init (AnimalFelidClass *klass)
 {
-  klass->open = viewer_file_open_impl;
+  klass->open = animal_felid_open_impl;
   g_print("Viewer file class initialized\n");
 }
 
 static void
-viewer_file_init (ViewerFile *self)
+animal_felid_init (AnimalFelid *self)
 {
-  ViewerFilePrivate *priv = viewer_file_get_instance_private (self);
+  AnimalFelidPrivate *priv = animal_felid_get_instance_private (self);
 
   /* initialize all public and private members to reasonable default values.
    * They are all automatically initialized to 0 to begin with. */
-  g_print("Viewer file object initialized\n");
+  g_print("Felid object initialized\n");
 }
 
-void viewer_file_open(ViewerFile *self, GError **error) {
-  ViewerFileClass *klass;
-  klass = VIEWER_FILE_GET_CLASS (self);
+void animal_felid_open(AnimalFelid *self, GError **error) {
+  AnimalFelidClass *klass;
+  klass = ANIMAL_FELID_GET_CLASS (self);
   klass->open(self, error);
 }

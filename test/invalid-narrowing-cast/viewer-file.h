@@ -3,8 +3,8 @@
  */
 
 /* inclusion guard */
-#ifndef __VIEWER_FILE_H__
-#define __VIEWER_FILE_H__
+#ifndef __FELID_H__
+#define __FELID_H__
 
 #include <glib-object.h>
 /*
@@ -16,16 +16,16 @@ G_BEGIN_DECLS
 /*
  * Type declaration.
  */
-#define VIEWER_TYPE_FILE viewer_file_get_type ()
-G_DECLARE_DERIVABLE_TYPE (ViewerFile, viewer_file, VIEWER, FILE, GObject)
+#define ANIMAL_FELID_TYPE animal_felid_get_type ()
+G_DECLARE_DERIVABLE_TYPE (AnimalFelid, animal_felid, ANIMAL, FELID, GObject)
 
-struct _ViewerFileClass
+struct _AnimalFelidClass
 {
   GObjectClass parent_class;
 
   /* Class virtual function fields. */
-  void (* open) (ViewerFile  *file,
-                 GError     **error);
+  void (* open) (AnimalFelid *file,
+		 GError     **error);
 
   /* Padding to allow adding up to 12 new virtual functions without
    * breaking ABI. */
@@ -35,9 +35,9 @@ struct _ViewerFileClass
 /*
  * Method definitions.
  */
-ViewerFile *viewer_file_new (void);
-void viewer_file_open(ViewerFile *self, GError **error);
+AnimalFelid *animal_felid_new (void);
+void animal_felid_open(AnimalFelid *self, GError **error);
 
 G_END_DECLS
 
-#endif /* __VIEWER_FILE_H__ */
+#endif /* __FELID_H__ */
