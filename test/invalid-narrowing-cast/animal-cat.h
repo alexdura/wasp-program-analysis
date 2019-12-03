@@ -6,7 +6,7 @@
 #ifndef __VIEWER_PINK_H__
 #define __VIEWER_PINK_H__
 
-#include "viewer-file.h"
+#include "animal-felid.h"
 #include <glib-object.h>
 /*
  * Potentially, include other headers on which this header depends.

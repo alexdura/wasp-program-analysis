@@ -1,8 +1,8 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#include "viewer-file.h"
-#include "viewer-pink.h"
+#include "animal-felid.h"
+#include "animal-cat.h"
 
 static void test_object (void)
 {

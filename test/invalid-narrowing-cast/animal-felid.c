@@ -1,6 +1,6 @@
 #include <glib.h>
 #include <glib-object.h>
-#include "viewer-file.h"
+#include "animal-felid.h"
 
 /// Viewer file stuff
 // This type has to be defined by the user, its purpose is to hold private data

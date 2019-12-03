@@ -1,6 +1,6 @@
 #include <glib.h>
 #include <glib-object.h>
-#include "viewer-pink.h"
+#include "animal-cat.h"
 
 // The last argument is the type of the PARENT
 // If you put the same type here, the program
