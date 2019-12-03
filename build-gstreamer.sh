@@ -19,7 +19,6 @@ then
     mkdir `pwd`/build
     mkdir `pwd`/install
     ENABLE_VALGRIND=0 \
-		   CFLAGS=$'-g -O1 -Xclang -disable-llvm-passes -D__NO_STRING_INLINES  -D_FORTIFY_SOURCE=0 -U__OPTIMIZE__' \
 		   CC=wllvm \
 		   meson build
 fi

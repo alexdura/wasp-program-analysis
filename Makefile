@@ -7,7 +7,10 @@ GST_LIB_BC := \
 	build/subprojects/gstreamer/libs/gst/base/libgstbase-1.0.so.0.1700.0.bc \
 	build/subprojects/gstreamer/libs/gst/controller/libgstcontroller-1.0.so.0.1700.0.bc \
 	build/subprojects/gstreamer/gst/libgstreamer-1.0.so.0.1700.0.bc \
-	build/subprojects/gstreamer/libs/gst/check/libgstcheck-1.0.so.0.1700.0.bc \
+	build/subprojects/gstreamer/libs/gst/check/libgstcheck-1.0.so.0.1700.0.bc
+
+# GST_LIB_BC := \
+# 	build/subprojects/gstreamer/gst/libgstreamer-1.0.so.0.1700.0.bc
 
 GST_LIB_BC := $(addprefix $(GST_PREFIX)/,$(GST_LIB_BC))
 
@@ -25,7 +28,7 @@ all : all-reports
 # Build all library .ll files
 libs-ll : $(GST_LIB_IR)
 
-TEST_PREFIX := $(GST_PREFIX)/build/subprojects/gst-plugins-bad/tests/check
+TEST_PREFIX := $(GST_PREFIX)/build/subprojects/gst-plugins-*/tests/check
 
 TEST_BC := $(wildcard $(TEST_PREFIX)/*.bc)
 TEST_LL := $(patsubst %.bc,%.ll,$(TEST_BC))
@@ -53,3 +56,6 @@ blank := $(empty) $(empty)
 ALL_REPORTS := $(patsubst %.ll,%.linked.report,$(TEST_LL))
 
 all-reports : $(ALL_REPORTS)
+
+
+all-linked-ll : $(patsubst %.bc,%.linked.ll,$(TEST_BC))
