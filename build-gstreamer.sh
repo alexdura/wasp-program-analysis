@@ -19,6 +19,7 @@ then
     mkdir `pwd`/build
     mkdir `pwd`/install
     ENABLE_VALGRIND=0 \
+		   CFLAGS=$'-g -O3' \
 		   CC=wllvm \
 		   meson build
 fi
