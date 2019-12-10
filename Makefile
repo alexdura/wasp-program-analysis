@@ -28,7 +28,7 @@ all : all-reports
 # Build all library .ll files
 libs-ll : $(GST_LIB_IR)
 
-TEST_PREFIX := $(GST_PREFIX)/build/subprojects/gst-plugins-*/tests/check
+TEST_PREFIX := $(GST_PREFIX)/build/subprojects/gst-plugins-bad/tests/check
 
 TEST_BC := $(wildcard $(TEST_PREFIX)/*.bc)
 TEST_LL := $(patsubst %.bc,%.ll,$(TEST_BC))
